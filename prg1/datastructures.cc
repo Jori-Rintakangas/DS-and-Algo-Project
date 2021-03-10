@@ -36,36 +36,49 @@ Datastructures::~Datastructures()
 
 int Datastructures::place_count()
 {
-    // Replace this comment with your implementation
-    return 0;
+    return places_.size();
 }
 
 void Datastructures::clear_all()
 {
-    // Replace this comment with your implementation
+    places_.clear();
+    place_list_.clear();
 }
 
 std::vector<PlaceID> Datastructures::all_places()
 {
-    // Replace this comment with your implementation
-    return {};
+    return place_list_;
 }
 
 bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coord xy)
 {
-    // Replace this comment with your implementation
+    if ( places_.find(id) == places_.end() )
+    {
+        Place info = {name, type, xy};
+        places_.insert({id, info});
+        place_list_.push_back(id);
+        return true;
+    }
     return false;
 }
 
 std::pair<Name, PlaceType> Datastructures::get_place_name_type(PlaceID id)
 {
-    // Replace this comment with your implementation
+    if ( places_.find(id) != places_.end() )
+    {
+        Place info = places_.at(id);
+        return {info.place_name, info.place_type};
+    }
     return {NO_NAME, PlaceType::NO_TYPE};
 }
 
 Coord Datastructures::get_place_coord(PlaceID id)
 {
-    // Replace this comment with your implementation
+    if ( places_.find(id) != places_.end() )
+    {
+        Place info = places_.at(id);
+        return info.coordinate;
+    }
     return NO_COORD;
 }
 
@@ -172,3 +185,4 @@ AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
     // Replace this comment with your implementation
     return NO_AREA;
 }
+
