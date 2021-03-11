@@ -10,6 +10,10 @@
 #include <limits>
 #include <functional>
 #include <memory>
+#include <algorithm>
+#include <map>
+#include <QDebug>
+#include <cmath>
 
 // Types for IDs
 using PlaceID = long int;
@@ -185,7 +189,8 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
-
+    bool alphabet_sorted_ = false;
+    bool coord_sorted_ = false;
     struct Place
     {
         Name place_name;
@@ -193,10 +198,9 @@ private:
         Coord coordinate;
     };
 
-    std::unordered_map<PlaceID, Place> places_;
-
-    std::vector<PlaceID> place_list_;
-
+    std::unordered_map<PlaceID, std::shared_ptr<Place>> places_;
+    std::vector<PlaceID> alphabetically_;
+    std::vector<PlaceID> coord_order_;
     std::vector<AreaID> area_list_;
 
 

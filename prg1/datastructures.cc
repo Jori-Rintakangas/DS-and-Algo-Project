@@ -42,21 +42,25 @@ int Datastructures::place_count()
 void Datastructures::clear_all()
 {
     places_.clear();
-    place_list_.clear();
+    alphabetically_.clear();
+    coord_order_.clear();
 }
 
 std::vector<PlaceID> Datastructures::all_places()
 {
-    return place_list_;
+    return alphabetically_;
 }
 
 bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coord xy)
 {
     if ( places_.find(id) == places_.end() )
     {
-        Place info = {name, type, xy};
+        alphabet_sorted_ = false;
+        coord_sorted_ = false;
+        std::shared_ptr<Place> info(new Place{name, type, xy});
         places_.insert({id, info});
-        place_list_.push_back(id);
+        alphabetically_.push_back(id);
+        coord_order_.push_back(id);
         return true;
     }
     return false;
@@ -66,7 +70,7 @@ std::pair<Name, PlaceType> Datastructures::get_place_name_type(PlaceID id)
 {
     if ( places_.find(id) != places_.end() )
     {
-        Place info = places_.at(id);
+        Place info = *places_.at(id);
         return {info.place_name, info.place_type};
     }
     return {NO_NAME, PlaceType::NO_TYPE};
@@ -76,7 +80,7 @@ Coord Datastructures::get_place_coord(PlaceID id)
 {
     if ( places_.find(id) != places_.end() )
     {
-        Place info = places_.at(id);
+        Place info = *places_.at(id);
         return info.coordinate;
     }
     return NO_COORD;
@@ -107,17 +111,29 @@ void Datastructures::creation_finished()
     // that are performed after all additions have been done.
 }
 
-
 std::vector<PlaceID> Datastructures::places_alphabetically()
 {
-    // Replace this comment with your implementation
-    return {};
+    if ( alphabet_sorted_ == false )
+    {
+        std::sort(alphabetically_.begin(), alphabetically_.end(),
+        [=](PlaceID a, PlaceID b){return (*places_.at(a)).place_name < (*places_.at(b)).place_name;});
+        alphabet_sorted_ = true;
+    }
+    return alphabetically_;
 }
 
 std::vector<PlaceID> Datastructures::places_coord_order()
 {
-    // Replace this comment with your implementation
-    return {};
+    if ( coord_sorted_ == false )
+    {
+        std::sort(coord_order_.begin(), coord_order_.end(), [=](PlaceID a, PlaceID b)
+        {
+            return sqrt(pow((*places_.at(a)).coordinate.x, 2) + pow((*places_.at(a)).coordinate.y, 2)) <
+                   sqrt(pow((*places_.at(b)).coordinate.x, 2) + pow((*places_.at(b)).coordinate.y, 2));
+        });
+        coord_sorted_ = true;
+    }
+    return coord_order_;
 }
 
 std::vector<PlaceID> Datastructures::find_places_name(Name const& name)
