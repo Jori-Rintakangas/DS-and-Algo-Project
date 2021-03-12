@@ -191,13 +191,14 @@ private:
     // Add stuff needed for your class implementation here
     bool alphabet_sorted_ = false;
     bool coord_sorted_ = false;
+
     struct Place
     {
         Name place_name;
         PlaceType place_type;
         Coord coordinate;
     };
-
+    std::unordered_map<PlaceID, std::shared_ptr<Place>>::iterator last_added_;
     std::unordered_map<PlaceID, std::shared_ptr<Place>> places_;
     std::vector<PlaceID> alphabetically_;
     std::vector<PlaceID> coord_order_;

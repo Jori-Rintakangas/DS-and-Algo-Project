@@ -58,7 +58,8 @@ bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coo
         alphabet_sorted_ = false;
         coord_sorted_ = false;
         std::shared_ptr<Place> info(new Place{name, type, xy});
-        places_.insert({id, info});
+        auto value = places_.insert(last_added_, {id, info});
+        last_added_ = value;
         alphabetically_.push_back(id);
         coord_order_.push_back(id);
         return true;
@@ -138,14 +139,28 @@ std::vector<PlaceID> Datastructures::places_coord_order()
 
 std::vector<PlaceID> Datastructures::find_places_name(Name const& name)
 {
-    // Replace this comment with your implementation
-    return {};
+    std::vector<PlaceID> places_with_name = {};
+    for ( auto &place : places_ )
+    {
+        if ( (place.second)->place_name == name )
+        {
+            places_with_name.push_back(place.first);
+        }
+    }
+    return places_with_name;
 }
 
 std::vector<PlaceID> Datastructures::find_places_type(PlaceType type)
 {
-    // Replace this comment with your implementation
-    return {};
+    std::vector<PlaceID> places_with_type = {};
+    for ( auto &place : places_ )
+    {
+        if ( (place.second)->place_type == type )
+        {
+            places_with_type.push_back(place.first);
+        }
+    }
+    return places_with_type;
 }
 
 bool Datastructures::change_place_name(PlaceID id, const Name& newname)
