@@ -44,6 +44,8 @@ void Datastructures::clear_all()
     places_.clear();
     alphabetically_.clear();
     coord_order_.clear();
+    area_list_.clear();
+    areas_.clear();
 }
 
 std::vector<PlaceID> Datastructures::all_places()
@@ -89,19 +91,33 @@ Coord Datastructures::get_place_coord(PlaceID id)
 
 bool Datastructures::add_area(AreaID id, const Name &name, std::vector<Coord> coords)
 {
-    // Replace this comment with your implementation
+    if ( areas_.find(id) == areas_.end() )
+    {
+        std::shared_ptr<Area> info(new Area{name, coords, nullptr});
+        areas_.insert({id, info});
+        area_list_.push_back(id);
+        return true;
+    }
     return false;
 }
 
 Name Datastructures::get_area_name(AreaID id)
 {
-    // Replace this comment with your implementation
+    auto it = areas_.find(id);
+    if ( it != areas_.end() )
+    {
+        return (*it->second).area_name;
+    }
     return NO_NAME;
 }
 
 std::vector<Coord> Datastructures::get_area_coords(AreaID id)
 {
-    // Replace this comment with your implementation
+    auto it = areas_.find(id);
+    if ( it != areas_.end() )
+    {
+        return (*it->second).coords;
+    }
     return {NO_COORD};
 }
 
@@ -185,8 +201,7 @@ bool Datastructures::change_place_coord(PlaceID id, Coord newcoord)
 
 std::vector<AreaID> Datastructures::all_areas()
 {
-    // Replace this comment with your implementation
-    return {};
+    return area_list_;
 }
 
 bool Datastructures::add_subarea_to_area(AreaID id, AreaID parentid)

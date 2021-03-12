@@ -198,12 +198,21 @@ private:
         PlaceType place_type;
         Coord coordinate;
     };
+
+    struct Area
+    {
+        Name area_name;
+        std::vector<Coord> coords;
+        std::shared_ptr<Area> sub_area;
+    };
+
     std::unordered_map<PlaceID, std::shared_ptr<Place>>::iterator last_added_;
     std::unordered_map<PlaceID, std::shared_ptr<Place>> places_;
+    std::unordered_map<AreaID, std::shared_ptr<Area>> areas_;
+
     std::vector<PlaceID> alphabetically_;
     std::vector<PlaceID> coord_order_;
     std::vector<AreaID> area_list_;
-
 
 };
 
