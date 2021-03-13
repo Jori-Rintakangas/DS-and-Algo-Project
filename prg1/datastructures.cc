@@ -93,7 +93,7 @@ bool Datastructures::add_area(AreaID id, const Name &name, std::vector<Coord> co
 {
     if ( areas_.find(id) == areas_.end() )
     {
-        std::shared_ptr<Area> info(new Area{name, coords, nullptr});
+        std::shared_ptr<Area> info(new Area{name, coords, nullptr, nullptr});
         areas_.insert({id, info});
         area_list_.push_back(id);
         return true;
@@ -206,14 +206,32 @@ std::vector<AreaID> Datastructures::all_areas()
 
 bool Datastructures::add_subarea_to_area(AreaID id, AreaID parentid)
 {
-    // Replace this comment with your implementation
+    auto area = areas_.find(id);
+    auto parent_a = areas_.find(parentid);
+    if ( area != areas_.end() && parent_a != areas_.end() )
+    {
+        if ( (*area->second).parent_area == nullptr )
+        {
+            auto area_ptr = std::make_shared<std::pair<AreaID, std::shared_ptr<Area>>>(*area);
+            auto parent_ptr = std::make_shared<std::pair<AreaID, std::shared_ptr<Area>>>(*parent_a);
+            (*parent_a->second).sub_area = area_ptr;
+            (*area->second).parent_area = parent_ptr;
+            return true;
+        }
+        return false;
+    }
     return false;
 }
 
 std::vector<AreaID> Datastructures::subarea_in_areas(AreaID id)
 {
-    // Replace this comment with your implementation
-    return {NO_AREA};
+    if ( areas_.find(id) == areas_.end() )
+    {
+        return {NO_AREA};
+    }
+    std::vector<AreaID> areas = {};
+    std::vector<AreaID> parent_areas = find_parent_areas(id, areas);
+    return parent_areas;
 }
 
 std::vector<PlaceID> Datastructures::places_closest_to(Coord xy, PlaceType type)
@@ -238,5 +256,21 @@ AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
 {
     // Replace this comment with your implementation
     return NO_AREA;
+}
+
+std::vector<AreaID> Datastructures::find_parent_areas(AreaID id, std::vector<AreaID> areas)
+{
+    auto area = areas_.find(id);
+    auto p_area = (*area->second).parent_area;
+    if ( p_area != nullptr )
+    {
+        AreaID new_id = p_area->first;
+        areas.push_back(new_id);
+        return find_parent_areas(new_id, areas);
+    }
+    else
+    {
+        return areas;
+    }
 }
 

@@ -188,7 +188,9 @@ public:
     AreaID common_area_of_subareas(AreaID id1, AreaID id2);
 
 private:
-    // Add stuff needed for your class implementation here
+
+    std::vector<AreaID> find_parent_areas(AreaID id, std::vector<AreaID> areas);
+
     bool alphabet_sorted_ = false;
     bool coord_sorted_ = false;
 
@@ -203,7 +205,8 @@ private:
     {
         Name area_name;
         std::vector<Coord> coords;
-        std::shared_ptr<Area> sub_area;
+        std::shared_ptr<std::pair<AreaID, std::shared_ptr<Area>>> sub_area;
+        std::shared_ptr<std::pair<AreaID, std::shared_ptr<Area>>> parent_area;
     };
 
     std::unordered_map<PlaceID, std::shared_ptr<Place>>::iterator last_added_;
