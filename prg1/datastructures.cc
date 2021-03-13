@@ -184,6 +184,7 @@ bool Datastructures::change_place_name(PlaceID id, const Name& newname)
     if ( places_.find(id) != places_.end() )
     {
         (*places_.at(id)).place_name = newname;
+        alphabet_sorted_ = false;
         return true;
     }
     return false;
@@ -194,6 +195,7 @@ bool Datastructures::change_place_coord(PlaceID id, Coord newcoord)
     if ( places_.find(id) != places_.end() )
     {
         (*places_.at(id)).coordinate = newcoord;
+        coord_sorted_ = false;
         return true;
     }
     return false;
