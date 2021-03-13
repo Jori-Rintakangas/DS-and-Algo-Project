@@ -16,8 +16,8 @@
 #include <cmath>
 
 // Types for IDs
-using PlaceID = long int;
-using AreaID = long int;
+using PlaceID = long long int;
+using AreaID = long long int;
 using Name = std::string;
 using WayID = std::string;
 
