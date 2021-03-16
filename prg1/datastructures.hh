@@ -14,6 +14,7 @@
 #include <map>
 #include <QDebug>
 #include <cmath>
+#include <queue>
 
 // Types for IDs
 using PlaceID = long long int;
@@ -208,10 +209,11 @@ private:
 
     struct Area
     {
+        AreaID id;
         Name area_name;
         std::vector<Coord> coords;
-        std::shared_ptr<std::pair<AreaID, std::shared_ptr<Area>>> sub_area;
-        std::shared_ptr<std::pair<AreaID, std::shared_ptr<Area>>> parent_area;
+        std::vector<std::shared_ptr<Area>> sub_areas;
+        std::shared_ptr<Area> parent_area;
     };
 
     std::unordered_map<PlaceID, std::shared_ptr<Place>> places_;

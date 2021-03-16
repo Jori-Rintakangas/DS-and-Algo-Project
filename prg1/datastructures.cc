@@ -101,7 +101,8 @@ bool Datastructures::add_area(AreaID id, const Name &name, std::vector<Coord> co
 {
     if ( areas_.find(id) == areas_.end() )
     {
-        std::shared_ptr<Area> info(new Area{name, coords, nullptr, nullptr});
+        std::vector<std::shared_ptr<Area>> sub_areas = {};
+        std::shared_ptr<Area> info(new Area{id, name, coords, sub_areas, nullptr});
         areas_.insert({id, info});
         area_list_.push_back(id);
         return true;
@@ -235,9 +236,9 @@ bool Datastructures::add_subarea_to_area(AreaID id, AreaID parentid)
     {
         if ( (*area->second).parent_area == nullptr )
         {
-            auto area_ptr = std::make_shared<std::pair<AreaID, std::shared_ptr<Area>>>(*area);
-            auto parent_ptr = std::make_shared<std::pair<AreaID, std::shared_ptr<Area>>>(*parent_a);
-            (*parent_a->second).sub_area = area_ptr;
+            auto area_ptr = area->second;
+            auto parent_ptr = parent_a->second;
+            (*parent_a->second).sub_areas.push_back(area_ptr);
             (*area->second).parent_area = parent_ptr;
             return true;
         }
@@ -271,8 +272,35 @@ bool Datastructures::remove_place(PlaceID id)
 
 std::vector<AreaID> Datastructures::all_subareas_in_area(AreaID id)
 {
-    // Replace this comment with your implementation
-    return {NO_AREA};
+    std::vector<AreaID> sub_areas = {};
+    auto area = areas_.find(id);
+    if ( area == areas_.end() )
+    {
+        return {NO_AREA};
+    }
+    std::queue<std::shared_ptr<Area>> q;
+    q.push(areas_.at(id));
+
+    while (!q.empty())
+    {
+        int n = q.size();
+
+        while (n > 0)
+        {
+            std::shared_ptr<Area> area = q.front();
+            q.pop();
+            if ( area->id != id )
+            {
+                sub_areas.push_back(area->id);
+            }
+            for ( unsigned long long i = 0; i < area->sub_areas.size(); i++ )
+            {
+                q.push(area->sub_areas.at(i));
+            }
+            n--;
+        }
+    }
+    return sub_areas;
 }
 
 AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
@@ -287,7 +315,7 @@ std::vector<AreaID> Datastructures::find_parent_areas(AreaID id, std::vector<Are
     auto p_area = (*area->second).parent_area;
     if ( p_area != nullptr )
     {
-        AreaID new_id = p_area->first;
+        AreaID new_id = p_area->id;
         areas.push_back(new_id);
         return find_parent_areas(new_id, areas);
     }
