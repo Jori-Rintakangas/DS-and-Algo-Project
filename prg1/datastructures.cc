@@ -69,7 +69,7 @@ bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coo
         std::shared_ptr<Place> info(new Place{id, name, type, xy});
         std::shared_ptr<Place> info_2 = info;
         std::shared_ptr<Place> info_3 = info;
-        places_.insert({id, info});
+        places_.insert(last_added_,{id, info});
         places_a_.insert({name, info_2});
         places_c_.insert({xy, info_3});
         return true;

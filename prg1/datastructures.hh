@@ -65,10 +65,13 @@ struct CoordHash
 // as key for std::map/set
 inline bool operator<(Coord c1, Coord c2)
 {
-    /*if (c1.y < c2.y) { return true; }
-    else if (c2.y < c1.y) { return false; }
-    else { return c1.x < c2.x; }*/
-    return sqrt(pow(c1.x, 2) + pow(c1.y, 2)) < sqrt(pow(c2.x, 2) + pow(c2.y, 2));
+    int first = pow(c1.x, 2) + pow(c1.y, 2);
+    int second = pow(c2.x, 2) + pow(c2.y, 2);
+    if ( first == second )
+    {
+        return c1.y < c2.y;
+    }
+    return first < second;
 }
 
 // Return value for cases where coordinates were not found
@@ -211,7 +214,6 @@ private:
         std::shared_ptr<std::pair<AreaID, std::shared_ptr<Area>>> parent_area;
     };
 
-    std::unordered_map<PlaceID, std::shared_ptr<Place>>::iterator last_added_;
     std::unordered_map<PlaceID, std::shared_ptr<Place>> places_;
     std::unordered_map<AreaID, std::shared_ptr<Area>> areas_;
 
@@ -221,6 +223,10 @@ private:
 
     std::multimap<Name, std::shared_ptr<Place>> places_a_;
     std::multimap<Coord, std::shared_ptr<Place>> places_c_;
+
+    std::unordered_map<PlaceID, std::shared_ptr<Place>>::iterator last_added_ = places_.begin();
+    std::multimap<Name, std::shared_ptr<Place>>::iterator last_added_2_ = places_a_.begin();
+    std::multimap<Coord, std::shared_ptr<Place>>::iterator last_added_3_ = places_c_.begin();
 
 };
 
