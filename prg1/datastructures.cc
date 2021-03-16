@@ -42,15 +42,22 @@ int Datastructures::place_count()
 void Datastructures::clear_all()
 {
     places_.clear();
+    places_a_.clear();
+    places_c_.clear();
     alphabetically_.clear();
     coord_order_.clear();
     area_list_.clear();
-    areas_.clear();
+    areas_.clear();   
 }
 
 std::vector<PlaceID> Datastructures::all_places()
 {
-    return alphabetically_;
+    std::vector<PlaceID> ids = {};
+    for ( auto & place : places_ )
+    {
+        ids.push_back(place.first);
+    }
+    return ids;
 }
 
 bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coord xy)
@@ -59,11 +66,12 @@ bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coo
     {
         alphabet_sorted_ = false;
         coord_sorted_ = false;
-        std::shared_ptr<Place> info(new Place{name, type, xy});
-        auto value = places_.insert(last_added_, {id, info});
-        last_added_ = value;
-        alphabetically_.push_back(id);
-        coord_order_.push_back(id);
+        std::shared_ptr<Place> info(new Place{id, name, type, xy});
+        std::shared_ptr<Place> info_2 = info;
+        std::shared_ptr<Place> info_3 = info;
+        places_.insert({id, info});
+        places_a_.insert({name, info_2});
+        places_c_.insert({xy, info_3});
         return true;
     }
     return false;
@@ -132,9 +140,13 @@ std::vector<PlaceID> Datastructures::places_alphabetically()
 {
     if ( alphabet_sorted_ == false )
     {
-        std::sort(alphabetically_.begin(), alphabetically_.end(),
-        [=](PlaceID a, PlaceID b){return (*places_.at(a)).place_name < (*places_.at(b)).place_name;});
+        alphabetically_.clear();
+        for ( auto &place : places_a_ )
+        {
+            alphabetically_.push_back(place.second->id);
+        }
         alphabet_sorted_ = true;
+        return alphabetically_;
     }
     return alphabetically_;
 }
@@ -143,12 +155,13 @@ std::vector<PlaceID> Datastructures::places_coord_order()
 {
     if ( coord_sorted_ == false )
     {
-        std::sort(coord_order_.begin(), coord_order_.end(), [=](PlaceID a, PlaceID b)
+        coord_order_.clear();
+        for ( auto &place : places_c_ )
         {
-            return sqrt(pow((*places_.at(a)).coordinate.x, 2) + pow((*places_.at(a)).coordinate.y, 2)) <
-                   sqrt(pow((*places_.at(b)).coordinate.x, 2) + pow((*places_.at(b)).coordinate.y, 2));
-        });
+            coord_order_.push_back(place.second->id);
+        }
         coord_sorted_ = true;
+        return coord_order_;
     }
     return coord_order_;
 }
@@ -183,8 +196,12 @@ bool Datastructures::change_place_name(PlaceID id, const Name& newname)
 {
     if ( places_.find(id) != places_.end() )
     {
+        Name old_name = (*places_.at(id)).place_name;
         (*places_.at(id)).place_name = newname;
-        alphabet_sorted_ = false;
+        alphabet_sorted_ = false; 
+        auto nh = places_a_.extract(old_name);
+        nh.key() = newname;
+        places_a_.insert(move(nh));
         return true;
     }
     return false;
@@ -194,8 +211,12 @@ bool Datastructures::change_place_coord(PlaceID id, Coord newcoord)
 {
     if ( places_.find(id) != places_.end() )
     {
+        Coord old_coord = (*places_.at(id)).coordinate;
         (*places_.at(id)).coordinate = newcoord;
-        coord_sorted_ = false;
+        coord_sorted_ = false; 
+        auto nodeHandler = places_c_.extract(old_coord);
+        nodeHandler.key() = newcoord;
+        places_c_.insert(std::move(nodeHandler));
         return true;
     }
     return false;

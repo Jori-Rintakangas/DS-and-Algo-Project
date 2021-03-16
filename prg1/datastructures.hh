@@ -65,9 +65,10 @@ struct CoordHash
 // as key for std::map/set
 inline bool operator<(Coord c1, Coord c2)
 {
-    if (c1.y < c2.y) { return true; }
+    /*if (c1.y < c2.y) { return true; }
     else if (c2.y < c1.y) { return false; }
-    else { return c1.x < c2.x; }
+    else { return c1.x < c2.x; }*/
+    return sqrt(pow(c1.x, 2) + pow(c1.y, 2)) < sqrt(pow(c2.x, 2) + pow(c2.y, 2));
 }
 
 // Return value for cases where coordinates were not found
@@ -196,6 +197,7 @@ private:
 
     struct Place
     {
+        PlaceID id;
         Name place_name;
         PlaceType place_type;
         Coord coordinate;
@@ -216,6 +218,9 @@ private:
     std::vector<PlaceID> alphabetically_;
     std::vector<PlaceID> coord_order_;
     std::vector<AreaID> area_list_;
+
+    std::multimap<Name, std::shared_ptr<Place>> places_a_;
+    std::multimap<Coord, std::shared_ptr<Place>> places_c_;
 
 };
 
