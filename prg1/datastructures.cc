@@ -195,30 +195,44 @@ std::vector<PlaceID> Datastructures::find_places_type(PlaceType type)
 
 bool Datastructures::change_place_name(PlaceID id, const Name& newname)
 {
-    if ( places_.find(id) != places_.end() )
+    auto it = places_.find(id);
+    if ( it != places_.end() )
     {
-        Name old_name = (*places_.at(id)).place_name;
-        (*places_.at(id)).place_name = newname;
-        alphabet_sorted_ = false; 
-        auto nh = places_a_.extract(old_name);
-        nh.key() = newname;
-        places_a_.insert(move(nh));
-        return true;
+        for ( auto &name : places_a_ )
+        {
+            if ( name.second->id == id )
+            {
+                Name old_name = it->second->place_name;
+                it->second->place_name = newname;
+                auto nh = places_a_.extract(old_name);
+                nh.key() = newname;
+                places_a_.insert(move(nh));
+                alphabet_sorted_ = false;
+                return true;
+            }
+        }
     }
     return false;
 }
 
 bool Datastructures::change_place_coord(PlaceID id, Coord newcoord)
 {
-    if ( places_.find(id) != places_.end() )
+    auto it = places_.find(id);
+    if ( it != places_.end() )
     {
-        Coord old_coord = (*places_.at(id)).coordinate;
-        (*places_.at(id)).coordinate = newcoord;
-        coord_sorted_ = false; 
-        auto nodeHandler = places_c_.extract(old_coord);
-        nodeHandler.key() = newcoord;
-        places_c_.insert(std::move(nodeHandler));
-        return true;
+        for ( auto &coord : places_c_ )
+        {
+            if ( coord.second->id == id )
+            {
+                Coord old_coord = it->second->coordinate;
+                it->second->coordinate = newcoord;
+                auto nh = places_c_.extract(old_coord);
+                nh.key() = newcoord;
+                places_c_.insert(move(nh));
+                coord_sorted_ = false;
+                return true;
+            }
+        }
     }
     return false;
 }
