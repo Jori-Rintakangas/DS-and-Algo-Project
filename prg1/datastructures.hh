@@ -216,9 +216,6 @@ private:
         std::shared_ptr<Area> parent_area;
     };
 
-    std::shared_ptr<Area> find_lowest_common_ancestor(std::shared_ptr<Area> a1,
-                                                      std::shared_ptr<Area> a2);
-
     std::unordered_map<PlaceID, std::shared_ptr<Place>> places_;
     std::unordered_map<AreaID, std::shared_ptr<Area>> areas_;
 
