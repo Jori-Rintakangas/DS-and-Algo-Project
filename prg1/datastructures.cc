@@ -195,44 +195,32 @@ std::vector<PlaceID> Datastructures::find_places_type(PlaceType type)
 
 bool Datastructures::change_place_name(PlaceID id, const Name& newname)
 {
-    auto it = places_.find(id);
-    if ( it != places_.end() )
+    auto it_pair = places_a_.equal_range(places_.at(id)->place_name);
+    auto it = std::find_if(it_pair.first, it_pair.second,
+              [=](auto id_info){return id_info.second->id == id;});
+    if ( it != places_a_.end() )
     {
-        for ( auto &name : places_a_ )
-        {
-            if ( name.second->id == id )
-            {
-                Name old_name = it->second->place_name;
-                it->second->place_name = newname;
-                auto nh = places_a_.extract(old_name);
-                nh.key() = newname;
-                places_a_.insert(move(nh));
-                alphabet_sorted_ = false;
-                return true;
-            }
-        }
+        (*places_.at(id)).place_name = newname;
+        places_a_.erase(it);
+        places_a_.insert({newname, places_.at(id)});
+        alphabet_sorted_ = false;
+        return true;
     }
     return false;
 }
 
 bool Datastructures::change_place_coord(PlaceID id, Coord newcoord)
 {
-    auto it = places_.find(id);
-    if ( it != places_.end() )
+    auto it_pair = places_c_.equal_range(places_.at(id)->coordinate);
+    auto it = std::find_if(it_pair.first, it_pair.second,
+              [=](auto id_info){return id_info.second->id == id;});
+    if ( it != places_c_.end() )
     {
-        for ( auto &coord : places_c_ )
-        {
-            if ( coord.second->id == id )
-            {
-                Coord old_coord = it->second->coordinate;
-                it->second->coordinate = newcoord;
-                auto nh = places_c_.extract(old_coord);
-                nh.key() = newcoord;
-                places_c_.insert(move(nh));
-                coord_sorted_ = false;
-                return true;
-            }
-        }
+        (*places_.at(id)).coordinate = newcoord;
+        places_c_.erase(it);
+        places_c_.insert({newcoord, places_.at(id)});
+        coord_sorted_ = false;
+        return true;
     }
     return false;
 }
