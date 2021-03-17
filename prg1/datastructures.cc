@@ -307,7 +307,27 @@ std::vector<AreaID> Datastructures::all_subareas_in_area(AreaID id)
 
 AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
 {
-    // Replace this comment with your implementation
+    auto itr_1 = areas_.find(id1);
+    auto itr_2 = areas_.find(id2);
+    if ( itr_1 == areas_.end() or itr_2 == areas_.end() )
+    {
+        return NO_AREA;
+    }
+    auto area_1 = itr_1->second;
+    auto area_2 = itr_2->second;
+    std::map<std::shared_ptr<Area>, bool> ancestors = {};
+    while ( area_1 != nullptr )
+    {
+        ancestors[area_1] = true;
+        area_1 = area_1->parent_area;
+    }
+    while ( area_2 != nullptr )
+       {
+           if ( ancestors.find(area_2) != ancestors.end())
+               return area_2->id;
+           area_2 = area_2->parent_area;
+       }
+
     return NO_AREA;
 }
 
@@ -325,5 +345,10 @@ std::vector<AreaID> Datastructures::find_parent_areas(AreaID id, std::vector<Are
     {
         return areas;
     }
+}
+
+std::shared_ptr<Datastructures::Area> Datastructures::find_lowest_common_ancestor(std::shared_ptr<Datastructures::Area> a1, std::shared_ptr<Datastructures::Area> a2)
+{
+
 }
 
