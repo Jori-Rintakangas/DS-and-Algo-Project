@@ -262,13 +262,25 @@ std::vector<AreaID> Datastructures::subarea_in_areas(AreaID id)
 
 std::vector<PlaceID> Datastructures::places_closest_to(Coord xy, PlaceType type)
 {
-    // Replace this comment with your implementation
     return {};
 }
 
 bool Datastructures::remove_place(PlaceID id)
 {
-    // Replace this comment with your implementation
+    auto it = places_.find(id);
+    if ( it != places_.end() )
+    {
+        auto it_pair = places_a_.equal_range(places_.at(id)->place_name);
+        auto it1 = std::find_if(it_pair.first, it_pair.second,
+                  [=](auto id_info){return id_info.second->id == id;});
+        places_a_.erase(it1);
+        auto it_pair2 = places_c_.equal_range(places_.at(id)->coordinate);
+        auto it2 = std::find_if(it_pair2.first, it_pair2.second,
+                  [=](auto id_info){return id_info.second->id == id;});
+        places_c_.erase(it2);
+        places_.erase(it);
+        return true;
+    }
     return false;
 }
 
