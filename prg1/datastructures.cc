@@ -262,7 +262,46 @@ std::vector<AreaID> Datastructures::subarea_in_areas(AreaID id)
 
 std::vector<PlaceID> Datastructures::places_closest_to(Coord xy, PlaceType type)
 {
-    return {};
+    std::vector<PlaceID> closest_places = {};
+    std::priority_queue<std::pair<double, PlaceID>,
+            std::vector<std::pair<double, PlaceID>>,
+            std::greater<std::pair<double, PlaceID>> > closest = {};
+    bool t_specific = true;
+    if ( type == PlaceType::NO_TYPE )
+    {
+        t_specific = false;
+    }
+    for ( auto &place : places_ )
+    {
+        double dist = pow((place.second->coordinate.x) - xy.x, 2) +
+                      pow((place.second->coordinate.y) - xy.y, 2);
+        if ( t_specific )
+        {
+            if ( place.second->place_type == type )
+            {
+                closest.push({dist, place.first});
+            }
+        }
+        else
+        {
+            closest.push({dist, place.first});
+        }
+    }
+    if ( closest.empty() )
+    {
+        return closest_places;
+    }
+    for ( int i = 1; i <= 3; ++i )
+    {
+        auto element = closest.top();
+        closest_places.push_back(element.second);
+        closest.pop();
+        if ( closest.size() == 0 )
+        {
+            break;
+        }
+    }
+    return closest_places;
 }
 
 bool Datastructures::remove_place(PlaceID id)
@@ -279,6 +318,8 @@ bool Datastructures::remove_place(PlaceID id)
                   [=](auto id_info){return id_info.second->id == id;});
         places_c_.erase(it2);
         places_.erase(it);
+        coord_sorted_ = false;
+        alphabet_sorted_ = false;
         return true;
     }
     return false;
