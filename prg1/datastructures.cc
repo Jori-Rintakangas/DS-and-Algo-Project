@@ -251,13 +251,20 @@ bool Datastructures::add_subarea_to_area(AreaID id, AreaID parentid)
 
 std::vector<AreaID> Datastructures::subarea_in_areas(AreaID id)
 {
-    if ( areas_.find(id) == areas_.end() )
+    auto area = areas_.find(id);
+    if ( area == areas_.end() )
     {
         return {NO_AREA};
     }
-    std::vector<AreaID> areas = {};
-    std::vector<AreaID> parent_areas = find_parent_areas(id, areas);
-    return parent_areas;
+    std::vector<AreaID> sub_areas = {};
+    auto p_area = (*area->second).parent_area;
+    while ( p_area != nullptr )
+    {
+        AreaID new_id = p_area->id;
+        sub_areas.push_back(new_id);
+        p_area = p_area->parent_area;
+    }
+    return sub_areas;
 }
 
 std::vector<PlaceID> Datastructures::places_closest_to(Coord xy, PlaceType type)
@@ -302,6 +309,7 @@ std::vector<PlaceID> Datastructures::places_closest_to(Coord xy, PlaceType type)
         }
     }
     return closest_places;
+
 }
 
 bool Datastructures::remove_place(PlaceID id)
@@ -385,20 +393,3 @@ AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
 
     return NO_AREA;
 }
-
-std::vector<AreaID> Datastructures::find_parent_areas(AreaID id, std::vector<AreaID> areas)
-{
-    auto area = areas_.find(id);
-    auto p_area = (*area->second).parent_area;
-    if ( p_area != nullptr )
-    {
-        AreaID new_id = p_area->id;
-        areas.push_back(new_id);
-        return find_parent_areas(new_id, areas);
-    }
-    else
-    {
-        return areas;
-    }
-}
-
