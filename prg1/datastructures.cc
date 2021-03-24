@@ -42,8 +42,9 @@ int Datastructures::place_count()
 void Datastructures::clear_all()
 {
     places_.clear();
-    places_a_.clear();
-    places_c_.clear();
+    places_name_order_.clear();
+    places_coord_order_.clear();
+    place_list_.clear();
     alphabetically_.clear();
     coord_order_.clear();
     area_list_.clear();
@@ -52,12 +53,17 @@ void Datastructures::clear_all()
 
 std::vector<PlaceID> Datastructures::all_places()
 {
-    std::vector<PlaceID> ids = {};
-    for ( auto & place : places_ )
+    if ( places_valid_ )
     {
-        ids.push_back(place.first);
+        return place_list_;
     }
-    return ids;
+    place_list_.clear();
+    for ( auto &place : places_ )
+    {
+        place_list_.push_back(place.first);
+    }
+    places_valid_ = true;
+    return place_list_;
 }
 
 bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coord xy)
@@ -68,10 +74,11 @@ bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coo
         std::shared_ptr<Place> info_2 = info;
         std::shared_ptr<Place> info_3 = info;
         places_.insert({id, info});
-        places_a_.insert({name, info_2});
-        places_c_.insert({xy, info_3});
+        places_name_order_.insert({name, info_2});
+        places_coord_order_.insert({xy, info_3});
         alphabet_sorted_ = false;
         coord_sorted_ = false;
+        places_valid_ = false;
         return true;
     }
     return false;
@@ -79,20 +86,20 @@ bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coo
 
 std::pair<Name, PlaceType> Datastructures::get_place_name_type(PlaceID id)
 {
-    if ( places_.find(id) != places_.end() )
+    auto it = places_.find(id);
+    if ( it != places_.end() )
     {
-        Place info = *places_.at(id);
-        return {info.place_name, info.place_type};
+        return {(*it->second).place_name, (*it->second).place_type};
     }
     return {NO_NAME, PlaceType::NO_TYPE};
 }
 
 Coord Datastructures::get_place_coord(PlaceID id)
 {
-    if ( places_.find(id) != places_.end() )
+    auto it = places_.find(id);
+    if ( it != places_.end() )
     {
-        Place info = *places_.at(id);
-        return info.coordinate;
+        return (*it->second).coordinate;
     }
     return NO_COORD;
 }
@@ -142,7 +149,7 @@ std::vector<PlaceID> Datastructures::places_alphabetically()
     if ( alphabet_sorted_ == false )
     {
         alphabetically_.clear();
-        for ( auto &place : places_a_ )
+        for ( auto &place : places_name_order_ )
         {
             alphabetically_.push_back(place.second->id);
         }
@@ -157,7 +164,7 @@ std::vector<PlaceID> Datastructures::places_coord_order()
     if ( coord_sorted_ == false )
     {
         coord_order_.clear();
-        for ( auto &place : places_c_ )
+        for ( auto &place : places_coord_order_ )
         {
             coord_order_.push_back(place.second->id);
         }
@@ -195,14 +202,14 @@ std::vector<PlaceID> Datastructures::find_places_type(PlaceType type)
 
 bool Datastructures::change_place_name(PlaceID id, const Name& newname)
 {
-    auto it_pair = places_a_.equal_range(places_.at(id)->place_name);
+    auto it_pair = places_name_order_.equal_range(places_.at(id)->place_name);
     auto it = std::find_if(it_pair.first, it_pair.second,
               [=](auto id_info){return id_info.second->id == id;});
-    if ( it != places_a_.end() )
+    if ( it != places_name_order_.end() )
     {
         (*places_.at(id)).place_name = newname;
-        places_a_.erase(it);
-        places_a_.insert({newname, places_.at(id)});
+        places_name_order_.erase(it);
+        places_name_order_.insert({newname, places_.at(id)});
         alphabet_sorted_ = false;
         return true;
     }
@@ -211,14 +218,14 @@ bool Datastructures::change_place_name(PlaceID id, const Name& newname)
 
 bool Datastructures::change_place_coord(PlaceID id, Coord newcoord)
 {
-    auto it_pair = places_c_.equal_range(places_.at(id)->coordinate);
+    auto it_pair = places_coord_order_.equal_range(places_.at(id)->coordinate);
     auto it = std::find_if(it_pair.first, it_pair.second,
               [=](auto id_info){return id_info.second->id == id;});
-    if ( it != places_c_.end() )
+    if ( it != places_coord_order_.end() )
     {
         (*places_.at(id)).coordinate = newcoord;
-        places_c_.erase(it);
-        places_c_.insert({newcoord, places_.at(id)});
+        places_coord_order_.erase(it);
+        places_coord_order_.insert({newcoord, places_.at(id)});
         coord_sorted_ = false;
         return true;
     }
@@ -317,14 +324,14 @@ bool Datastructures::remove_place(PlaceID id)
     auto it = places_.find(id);
     if ( it != places_.end() )
     {
-        auto it_pair = places_a_.equal_range(places_.at(id)->place_name);
+        auto it_pair = places_name_order_.equal_range(places_.at(id)->place_name);
         auto it1 = std::find_if(it_pair.first, it_pair.second,
                   [=](auto id_info){return id_info.second->id == id;});
-        places_a_.erase(it1);
-        auto it_pair2 = places_c_.equal_range(places_.at(id)->coordinate);
+        places_name_order_.erase(it1);
+        auto it_pair2 = places_coord_order_.equal_range(places_.at(id)->coordinate);
         auto it2 = std::find_if(it_pair2.first, it_pair2.second,
                   [=](auto id_info){return id_info.second->id == id;});
-        places_c_.erase(it2);
+        places_coord_order_.erase(it2);
         places_.erase(it);
         coord_sorted_ = false;
         alphabet_sorted_ = false;
@@ -343,7 +350,6 @@ std::vector<AreaID> Datastructures::all_subareas_in_area(AreaID id)
     }
     std::queue<std::shared_ptr<Area>> q;
     q.push(areas_.at(id));
-
     while (!q.empty())
     {
         int n = q.size();
@@ -370,7 +376,7 @@ AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
 {
     auto itr_1 = areas_.find(id1);
     auto itr_2 = areas_.find(id2);
-    if ( itr_1 == areas_.end() or itr_2 == areas_.end() )
+    if ( itr_1 == areas_.end() || itr_2 == areas_.end() )
     {
         return NO_AREA;
     }
