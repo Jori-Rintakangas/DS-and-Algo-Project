@@ -86,20 +86,20 @@ bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coo
 
 std::pair<Name, PlaceType> Datastructures::get_place_name_type(PlaceID id)
 {
-    auto it = places_.find(id);
-    if ( it != places_.end() )
+    auto place = places_.find(id);
+    if ( place != places_.end() )
     {
-        return {(*it->second).place_name, (*it->second).place_type};
+        return {(*place->second).place_name, (*place->second).place_type};
     }
     return {NO_NAME, PlaceType::NO_TYPE};
 }
 
 Coord Datastructures::get_place_coord(PlaceID id)
 {
-    auto it = places_.find(id);
-    if ( it != places_.end() )
+    auto place = places_.find(id);
+    if ( place != places_.end() )
     {
-        return (*it->second).coordinate;
+        return (*place->second).coordinate;
     }
     return NO_COORD;
 }
@@ -109,7 +109,7 @@ bool Datastructures::add_area(AreaID id, const Name &name, std::vector<Coord> co
     if ( areas_.find(id) == areas_.end() )
     {
         std::vector<std::shared_ptr<Area>> sub_areas = {};
-        std::shared_ptr<Area> info(new Area{id, name, coords, sub_areas, nullptr});
+        std::shared_ptr<Area> info = std::make_shared<Area>(Area{id, name, coords, sub_areas, nullptr});
         areas_.insert({id, info});
         area_list_.push_back(id);
         return true;
@@ -119,20 +119,20 @@ bool Datastructures::add_area(AreaID id, const Name &name, std::vector<Coord> co
 
 Name Datastructures::get_area_name(AreaID id)
 {
-    auto it = areas_.find(id);
-    if ( it != areas_.end() )
+    auto area = areas_.find(id);
+    if ( area != areas_.end() )
     {
-        return (*it->second).area_name;
+        return (*area->second).area_name;
     }
     return NO_NAME;
 }
 
 std::vector<Coord> Datastructures::get_area_coords(AreaID id)
 {
-    auto it = areas_.find(id);
-    if ( it != areas_.end() )
+    auto area = areas_.find(id);
+    if ( area != areas_.end() )
     {
-        return (*it->second).coords;
+        return (*area->second).coords;
     }
     return {NO_COORD};
 }
@@ -202,13 +202,13 @@ std::vector<PlaceID> Datastructures::find_places_type(PlaceType type)
 
 bool Datastructures::change_place_name(PlaceID id, const Name& newname)
 {
-    auto it_pair = places_name_order_.equal_range(places_.at(id)->place_name);
-    auto it = std::find_if(it_pair.first, it_pair.second,
-              [=](auto id_info){return id_info.second->id == id;});
-    if ( it != places_name_order_.end() )
+    auto name_range = places_name_order_.equal_range(places_.at(id)->place_name);
+    auto name = std::find_if(name_range.first, name_range.second,//find correct multimap elements
+                [=](auto id_info){return id_info.second->id == id;});
+    if ( name != places_name_order_.end() )
     {
         (*places_.at(id)).place_name = newname;
-        places_name_order_.erase(it);
+        places_name_order_.erase(name);
         places_name_order_.insert({newname, places_.at(id)});
         alphabet_sorted_ = false;
         return true;
@@ -218,13 +218,13 @@ bool Datastructures::change_place_name(PlaceID id, const Name& newname)
 
 bool Datastructures::change_place_coord(PlaceID id, Coord newcoord)
 {
-    auto it_pair = places_coord_order_.equal_range(places_.at(id)->coordinate);
-    auto it = std::find_if(it_pair.first, it_pair.second,
-              [=](auto id_info){return id_info.second->id == id;});
-    if ( it != places_coord_order_.end() )
+    auto coord_range = places_coord_order_.equal_range(places_.at(id)->coordinate);
+    auto coord = std::find_if(coord_range.first, coord_range.second,//find correct multimap elements
+                 [=](auto id_info){return id_info.second->id == id;});
+    if ( coord != places_coord_order_.end() )
     {
         (*places_.at(id)).coordinate = newcoord;
-        places_coord_order_.erase(it);
+        places_coord_order_.erase(coord);
         places_coord_order_.insert({newcoord, places_.at(id)});
         coord_sorted_ = false;
         return true;
@@ -316,25 +316,26 @@ std::vector<PlaceID> Datastructures::places_closest_to(Coord xy, PlaceType type)
         }
     }
     return closest_places;
-
 }
 
 bool Datastructures::remove_place(PlaceID id)
 {
-    auto it = places_.find(id);
-    if ( it != places_.end() )
+    auto place = places_.find(id);
+    if ( place != places_.end() )
     {
-        auto it_pair = places_name_order_.equal_range(places_.at(id)->place_name);
-        auto it1 = std::find_if(it_pair.first, it_pair.second,
-                  [=](auto id_info){return id_info.second->id == id;});
-        places_name_order_.erase(it1);
-        auto it_pair2 = places_coord_order_.equal_range(places_.at(id)->coordinate);
-        auto it2 = std::find_if(it_pair2.first, it_pair2.second,
-                  [=](auto id_info){return id_info.second->id == id;});
-        places_coord_order_.erase(it2);
-        places_.erase(it);
+        auto name_range = places_name_order_.equal_range(places_.at(id)->place_name);
+        auto coord_range = places_coord_order_.equal_range(places_.at(id)->coordinate);
+        // find correct multimap elements
+        auto name = std::find_if(name_range.first, name_range.second,
+                    [=](auto id_info){return id_info.second->id == id;});
+        auto coord = std::find_if(coord_range.first, coord_range.second,
+                     [=](auto id_info){return id_info.second->id == id;});
+        places_name_order_.erase(name);
+        places_coord_order_.erase(coord);
+        places_.erase(place);
         coord_sorted_ = false;
         alphabet_sorted_ = false;
+        places_valid_ = false;
         return true;
     }
     return false;
@@ -382,7 +383,7 @@ AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
     }
     auto area_1 = itr_1->second->parent_area;
     auto area_2 = itr_2->second->parent_area;
-    std::map<std::shared_ptr<Area>, bool> ancestors = {};
+    std::unordered_map<std::shared_ptr<Area>, bool> ancestors = {};
     while ( area_1 != nullptr )
     {
         ancestors[area_1] = true;
@@ -396,6 +397,5 @@ AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
            }
            area_2 = area_2->parent_area;
        }
-
     return NO_AREA;
 }
