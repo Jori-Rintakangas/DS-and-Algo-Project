@@ -15,6 +15,7 @@
 #include <QDebug>
 #include <cmath>
 #include <queue>
+#include <QSharedPointer>
 
 // Types for IDs
 using PlaceID = long long int;
@@ -194,8 +195,6 @@ public:
 
 private:
 
-    std::vector<AreaID> find_parent_areas(AreaID id, std::vector<AreaID> areas);
-
     bool alphabet_sorted_ = false;
     bool coord_sorted_ = false;
 
@@ -225,10 +224,6 @@ private:
 
     std::multimap<Name, std::shared_ptr<Place>> places_a_;
     std::multimap<Coord, std::shared_ptr<Place>> places_c_;
-
-    std::unordered_map<PlaceID, std::shared_ptr<Place>>::iterator last_added_ = places_.begin();
-    std::multimap<Name, std::shared_ptr<Place>>::iterator last_added_2_ = places_a_.begin();
-    std::multimap<Coord, std::shared_ptr<Place>>::iterator last_added_3_ = places_c_.begin();
 
 };
 

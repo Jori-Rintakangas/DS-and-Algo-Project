@@ -47,7 +47,7 @@ void Datastructures::clear_all()
     alphabetically_.clear();
     coord_order_.clear();
     area_list_.clear();
-    areas_.clear();   
+    areas_.clear();
 }
 
 std::vector<PlaceID> Datastructures::all_places()
@@ -64,14 +64,14 @@ bool Datastructures::add_place(PlaceID id, const Name& name, PlaceType type, Coo
 {
     if ( places_.find(id) == places_.end() )
     {
-        alphabet_sorted_ = false;
-        coord_sorted_ = false;
-        std::shared_ptr<Place> info(new Place{id, name, type, xy});
+        std::shared_ptr<Place> info = std::make_shared<Place>(Place {id, name, type, xy});
         std::shared_ptr<Place> info_2 = info;
         std::shared_ptr<Place> info_3 = info;
-        places_.insert(last_added_,{id, info});
+        places_.insert({id, info});
         places_a_.insert({name, info_2});
         places_c_.insert({xy, info_3});
+        alphabet_sorted_ = false;
+        coord_sorted_ = false;
         return true;
     }
     return false;
@@ -374,8 +374,8 @@ AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
     {
         return NO_AREA;
     }
-    auto area_1 = itr_1->second;
-    auto area_2 = itr_2->second;
+    auto area_1 = itr_1->second->parent_area;
+    auto area_2 = itr_2->second->parent_area;
     std::map<std::shared_ptr<Area>, bool> ancestors = {};
     while ( area_1 != nullptr )
     {
