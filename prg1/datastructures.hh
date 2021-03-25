@@ -34,6 +34,7 @@ int const NO_VALUE = std::numeric_limits<int>::min();
 // Return value for cases where name values were not found
 Name const NO_NAME = "!!NO_NAME!!";
 
+int const MAX_AMOUNT = 3;
 // Enumeration for different place types
 // !!Note since this is a C++11 "scoped enumeration", you'll have to refer to
 // individual values as PlaceType::SHELTER etc.
@@ -191,8 +192,9 @@ public:
     // If unordered_map find() or at() operations have worst case, or m == n -> O(n)
     std::vector<AreaID> all_subareas_in_area(AreaID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: O(n), Worst: O(n log n)
+    // Short rationale for estimate: For loop traversing all places -> O(n)
+    // If distances are in order "nearest-furthest", push() to priority queue always -> O(n log n)
     std::vector<PlaceID> places_closest_to(Coord xy, PlaceType type);
 
     // Estimate of performance: Average: O(m), Worst: O(n)

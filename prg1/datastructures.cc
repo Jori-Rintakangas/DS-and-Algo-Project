@@ -277,44 +277,54 @@ std::vector<AreaID> Datastructures::subarea_in_areas(AreaID id)
 std::vector<PlaceID> Datastructures::places_closest_to(Coord xy, PlaceType type)
 {
     std::vector<PlaceID> closest_places = {};
-    std::priority_queue<std::pair<double, PlaceID>,
-            std::vector<std::pair<double, PlaceID>>,
-            std::greater<std::pair<double, PlaceID>> > closest = {};
-    bool t_specific = true;
+    std::priority_queue<std::pair<Coord, PlaceID>,
+            std::vector<std::pair<Coord, PlaceID>> >closest = {};
+    bool type_specific = true;
     if ( type == PlaceType::NO_TYPE )
     {
-        t_specific = false;
+        type_specific = false;
     }
     for ( auto &place : places_ )
-    {
-        double dist = pow((place.second->coordinate.x) - xy.x, 2) +
-                      pow((place.second->coordinate.y) - xy.y, 2);
-        if ( t_specific )
+    {   // scaling place coordinates to determine distance by comparing them with each other
+        int new_x = (*place.second).coordinate.x - xy.x;
+        int new_y = (*place.second).coordinate.y - xy.y;
+        Coord new_xy = {new_x, new_y};
+        if ( place.second->place_type != type )
         {
-            if ( place.second->place_type == type )
+            if ( type_specific )
             {
-                closest.push({dist, place.first});
+                continue;
+            }
+        }
+        if ( closest.size() == MAX_AMOUNT )
+        {
+            if ( new_xy < closest.top().first )
+            {
+                closest.push({new_xy, (*place.second).id});
+                closest.pop();
             }
         }
         else
         {
-            closest.push({dist, place.first});
+            closest.push({new_xy, (*place.second).id});
         }
     }
     if ( closest.empty() )
     {
         return closest_places;
     }
-    for ( int i = 1; i <= 3; ++i )
+    for ( int i = 1; i <= MAX_AMOUNT; ++i )
     {
         auto element = closest.top();
         closest_places.push_back(element.second);
         closest.pop();
-        if ( closest.size() == 0 )
+        if ( closest.empty() )
         {
             break;
         }
     }
+    //needed since max-heap used
+    std::reverse(closest_places.begin(), closest_places.end());
     return closest_places;
 }
 
