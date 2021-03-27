@@ -203,7 +203,7 @@ std::vector<PlaceID> Datastructures::find_places_type(PlaceType type)
 bool Datastructures::change_place_name(PlaceID id, const Name& newname)
 {
     auto name_range = places_name_order_.equal_range(places_.at(id)->place_name);
-    auto name = std::find_if(name_range.first, name_range.second,//find correct multimap elements
+    auto name = std::find_if(name_range.first, name_range.second,//find correct multimap element
                 [=](auto id_info){return id_info.second->id == id;});
     if ( name != places_name_order_.end() )
     {
@@ -219,7 +219,7 @@ bool Datastructures::change_place_name(PlaceID id, const Name& newname)
 bool Datastructures::change_place_coord(PlaceID id, Coord newcoord)
 {
     auto coord_range = places_coord_order_.equal_range(places_.at(id)->coordinate);
-    auto coord = std::find_if(coord_range.first, coord_range.second,//find correct multimap elements
+    auto coord = std::find_if(coord_range.first, coord_range.second,//find correct multimap element
                  [=](auto id_info){return id_info.second->id == id;});
     if ( coord != places_coord_order_.end() )
     {
@@ -239,6 +239,10 @@ std::vector<AreaID> Datastructures::all_areas()
 
 bool Datastructures::add_subarea_to_area(AreaID id, AreaID parentid)
 {
+    if ( id == parentid )
+    {
+        return false;
+    }
     auto area = areas_.find(id);
     auto parent_a = areas_.find(parentid);
     if ( area != areas_.end() && parent_a != areas_.end() )
@@ -359,25 +363,24 @@ std::vector<AreaID> Datastructures::all_subareas_in_area(AreaID id)
     {
         return {NO_AREA};
     }
-    std::queue<std::shared_ptr<Area>> q;
-    q.push(areas_.at(id));
-    while (!q.empty())
+    std::queue<std::shared_ptr<Area>> areas;
+    areas.push(areas_.at(id));
+    while ( !areas.empty() )
     {
-        int n = q.size();
-
-        while (n > 0)
+        int amount = areas.size();
+        while ( amount > 0 )
         {
-            std::shared_ptr<Area> area = q.front();
-            q.pop();
+            std::shared_ptr<Area> area = areas.front();
+            areas.pop();
             if ( area->id != id )
             {
                 sub_areas.push_back(area->id);
             }
             for ( unsigned long long i = 0; i < area->sub_areas.size(); i++ )
             {
-                q.push(area->sub_areas.at(i));
+                areas.push(area->sub_areas.at(i));
             }
-            n--;
+            amount--;
         }
     }
     return sub_areas;
@@ -385,6 +388,10 @@ std::vector<AreaID> Datastructures::all_subareas_in_area(AreaID id)
 
 AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
 {
+    if ( id1 == id2 )
+    {
+        return NO_AREA;
+    }
     auto itr_1 = areas_.find(id1);
     auto itr_2 = areas_.find(id2);
     if ( itr_1 == areas_.end() || itr_2 == areas_.end() )
