@@ -1,0 +1,20 @@
+In this implementation all places and areas are added to unordered maps according to their
+id numbers. Searching place and area according to id is done many times, so unordered map
+is efficient choice, since search from unordered map is Theta(1) on average.
+Also adding is efficient, Theta(1) on average also. As a value for these unordered maps,
+there are shared pointers to structs, that contain other information of place and area.
+
+There are also two multimaps where there are place name and place coordinates as key and
+value is again shared pointer to struct. These multimaps are used to provide O(n) 
+performance for the methods, where places are returned in alphabetical or in coordinate
+order. The downside of the use of these multimaps is that adding place is O(log n) to
+ordered map. Also we need to change the keys of these maps in case place name or
+coordinate is changed. However using equal_range() operation the search and key change can
+be done relatively efficiently to multimaps.
+
+In the case of areas, their information structs contain a vector of shared pointers to 
+their subareas, and also shared pointer to their parent area. This way areas create
+tree structures, which allow us to search for subareas, parent areas and common subareas
+with O(n) complexity. Using tree structures for areas is probably the easiest way,
+since relationships between areas are hierarchical.
+
