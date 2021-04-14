@@ -9,6 +9,13 @@
 #include <utility>
 #include <limits>
 #include <functional>
+#include <memory>
+#include <algorithm>
+#include <map>
+#include <QDebug>
+#include <cmath>
+#include <queue>
+#include <QSharedPointer>
 
 // Types for IDs
 using PlaceID = long long int;
@@ -27,6 +34,7 @@ int const NO_VALUE = std::numeric_limits<int>::min();
 // Return value for cases where name values were not found
 Name const NO_NAME = "!!NO_NAME!!";
 
+int const MAX_AMOUNT = 3;
 // Enumeration for different place types
 // !!Note since this is a C++11 "scoped enumeration", you'll have to refer to
 // individual values as PlaceType::SHELTER etc.
@@ -60,9 +68,13 @@ struct CoordHash
 // as key for std::map/set
 inline bool operator<(Coord c1, Coord c2)
 {
-    if (c1.y < c2.y) { return true; }
-    else if (c2.y < c1.y) { return false; }
-    else { return c1.x < c2.x; }
+    int first = pow(c1.x, 2) + pow(c1.y, 2);
+    int second = pow(c2.x, 2) + pow(c2.y, 2);
+    if ( first == second )
+    {
+        return c1.y < c2.y;
+    }
+    return first < second;
 }
 
 // Return value for cases where coordinates were not found
@@ -84,80 +96,88 @@ public:
     Datastructures();
     ~Datastructures();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Theta(1)
+    // Short rationale for estimate: size()-opearation complexity constant
     int place_count();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Theta(n+m), n == number of places m == number of areas
+    // Short rationale for estimate: clear()-operation complexity Theta(n)
     void clear_all();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Best: Theta(1), Worst: O(n)
+    // Short rationale for estimate: Best if all places in vector, worst if need to traverse all places.
     std::vector<PlaceID> all_places();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Best: Theta(1), Worst: O(n)
+    // Short rationale for estimate: Best if place not added, unordered_map find() is Theta(1)
+    // on average. Worst if unordered_map insert() or find() takes O(n).
     bool add_place(PlaceID id, Name const& name, PlaceType type, Coord xy);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: Theta(1), Worst: O(n)
+    // Short rationale for estimate: unordered_map find()-operation.
     std::pair<Name, PlaceType> get_place_name_type(PlaceID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: Theta(1), Worst: O(n)
+    // Short rationale for estimate: unordered_map find()-operation.
     Coord get_place_coord(PlaceID id);
 
     // We recommend you implement the operations below only after implementing the ones above
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Best: Theta(1), Worst: O(n)
+    // Short rationale for estimate: Best if no need to sort, worst when traversing all places.
     std::vector<PlaceID> places_alphabetically();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Best: Theta(1), Worst: O(n)
+    // Short rationale for estimate: Best if no need to sort, worst when traversing all places.
     std::vector<PlaceID> places_coord_order();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Theta(n)
+    // Short rationale for estimate: Always traversing all places.
     std::vector<PlaceID> find_places_name(Name const& name);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Theta(n)
+    // Short rationale for estimate: Always traversing all places.
     std::vector<PlaceID> find_places_type(PlaceType type);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average O(m + log n), Worst: O(n)
+    // m == number of places with same name, n == number of all places
+    // Short rationale for estimate: multimap insert(), equal_range() operations are log n,
+    // std::find_if is O(m). Worst case if unorderd_map at()-operation takes O(n) or if n == m.
     bool change_place_name(PlaceID id, Name const& newname);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average O(m + log n), Worst: O(n)
+    // m == number of places with same coordinates, n == number of all places
+    // Short rationale for estimate: multimap insert(), equal_range() operations are log n,
+    // std::find_if is O(m). Worst case if unorderd_map at()-operation takes O(n) or if n == m.
     bool change_place_coord(PlaceID id, Coord newcoord);
 
     // We recommend you implement the operations below only after implementing the ones above
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Best: Theta(1), Worst: O(n)
+    // Short rationale for estimate: Best if area not added, unordered_map find() is Theta(1)
+    // on average. Worst if unordered_map insert() or find() takes O(n).
     bool add_area(AreaID id, Name const& name, std::vector<Coord> coords);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: Theta(1), Worst: O(n)
+    // Short rationale for estimate: unordered_map find()-operation
     Name get_area_name(AreaID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: Theta(1), Worst: O(n)
+    // Short rationale for estimate: unordered_map find()-operation
     std::vector<Coord> get_area_coords(AreaID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Theta(1)
+    // Short rationale for estimate: Simply returning a vector.
     std::vector<AreaID> all_areas();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: Theta(1), Worst: O(n)
+    // Short rationale for estimate: unordered_map find() operation
     bool add_subarea_to_area(AreaID id, AreaID parentid);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: O(m), Worst: O(n)
+    // m == number of ancestor areas of given area. n == number of all areas
+    // Short rationale for estimate: Traversing all ancestor areas in while-loop.
+    // Worst case if unordered_map find() operation takes O(n) or if m == n.
     std::vector<AreaID> subarea_in_areas(AreaID id);
 
     // Non-compulsory operations
@@ -166,20 +186,27 @@ public:
     // Short rationale for estimate:
     void creation_finished();
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: O(m), Worst: O(n)
+    // m == number of subareas of given area. n == number of all areas
+    // Short rationale for estimate: While loop traversing all subareas of given area -> O(m)
+    // Worst if unordered_map find() or at() operation takes O(n), or if m == n.
     std::vector<AreaID> all_subareas_in_area(AreaID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: O(n), Worst: O(n log n)
+    // Short rationale for estimate: For loop traversing all places -> O(n)
+    // If calculated distances happen to be in order "nearest-furthest", then
+    // push() to priority queue needed every time -> O(n log n)
     std::vector<PlaceID> places_closest_to(Coord xy, PlaceType type);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Best: Theta(1), Worst: O(n)
+    // Short rationale for estimate: Best if place not removed, unordered_map find() opeartion
+    // is constant on average. Worst case if unordered_map find() or erase takes O(n).
     bool remove_place(PlaceID id);
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: Average: O(h), Worst: O(h*log h)
+    // h == length of area-subarea tree. (from given area to closest common area)
+    // Short rationale for estimate: While loop traversing all parent areas -> O(h)
+    // Worst case happens when unordered_map insert takes O(h) -> O(h*log h)
     AreaID common_area_of_subareas(AreaID id1, AreaID id2);
 
     // Phase 2 operations
@@ -231,7 +258,38 @@ public:
     Distance trim_ways();
 
 private:
-    // Add stuff needed for your class implementation here
+
+    bool alphabet_sorted_ = false;
+    bool coord_sorted_ = false;
+    bool places_valid_ = true;
+
+    struct Place
+    {
+        PlaceID id;
+        Name place_name;
+        PlaceType place_type;
+        Coord coordinate;
+    };
+
+    struct Area
+    {
+        AreaID id;
+        Name area_name;
+        std::vector<Coord> coords;
+        std::vector<std::shared_ptr<Area>> sub_areas;
+        std::shared_ptr<Area> parent_area;
+    };
+
+    std::unordered_map<PlaceID, std::shared_ptr<Place>> places_;
+    std::unordered_map<AreaID, std::shared_ptr<Area>> areas_;
+
+    std::vector<PlaceID> alphabetically_;
+    std::vector<PlaceID> coord_order_;
+    std::vector<AreaID> area_list_;
+    std::vector<PlaceID> place_list_;
+
+    std::multimap<Name, std::shared_ptr<Place>> places_name_order_;
+    std::multimap<Coord, std::shared_ptr<Place>> places_coord_order_;
 
 };
 
