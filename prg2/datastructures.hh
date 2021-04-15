@@ -291,6 +291,26 @@ private:
     std::multimap<Name, std::shared_ptr<Place>> places_name_order_;
     std::multimap<Coord, std::shared_ptr<Place>> places_coord_order_;
 
+    struct Way
+    {
+        std::vector<Coord> coordinates;
+        Distance length;
+        bool length_valid;
+    };
+
+    struct Crossroad
+    {
+        std::vector<std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>>> neighbours;
+        Distance dist_from_start;
+        int steps_from_start;
+        std::shared_ptr<int> colour;
+        std::shared_ptr<Crossroad> arrived_from;
+    };
+
+    std::unordered_map<Coord, std::shared_ptr<Crossroad>, CoordHash, std::equal_to<Coord>> crossroads_;
+    std::unordered_map<WayID, std::shared_ptr<Way>> ways_;
+    std::vector<WayID> way_ids_;
+
 };
 
 #endif // DATASTRUCTURES_HH
