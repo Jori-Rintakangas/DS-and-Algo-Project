@@ -293,6 +293,7 @@ private:
 
     struct Way
     {
+        WayID id;
         std::vector<Coord> coordinates;
         Distance length;
         bool length_valid;
@@ -300,6 +301,7 @@ private:
 
     struct Crossroad
     {
+        Coord location;
         std::vector<std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>>> neighbours;
         Distance dist_from_start;
         int steps_from_start;

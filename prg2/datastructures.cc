@@ -430,18 +430,18 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     }
     auto coord_1 = crossroads_.find(coords.front());
     auto coord_2 = crossroads_.find(coords.back());
-    std::shared_ptr<Way> way = std::make_shared<Way>(Way{coords, 0, false});
+    std::shared_ptr<Way> way = std::make_shared<Way>(Way{id, coords, 0, false});
     std::shared_ptr<Way> way_ptr_1 = way;
     std::shared_ptr<Way> way_ptr_2 = way;
     std::vector<std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>>> neighbours;
     std::shared_ptr<Crossroad> crossroad = std::make_shared<Crossroad>
-                   (Crossroad{neighbours, 0, 0, nullptr, nullptr});
+            (Crossroad{coords.front(), neighbours, 0, 0, nullptr, nullptr});
     std::shared_ptr<Crossroad> crossroad_ptr_1 = crossroad;
     // if no crossroad exist in way starting and ending points
     if ( coord_1 == crossroads_.end() && coord_2 == crossroads_.end() )
     {
         std::shared_ptr<Crossroad> crossroad_end = std::make_shared<Crossroad>
-                                 (Crossroad{neighbours, 0, 0, nullptr, nullptr});
+                                 (Crossroad{coords.back(), neighbours, 0, 0, nullptr, nullptr});
         std::shared_ptr<Crossroad> crossroad_ptr_2 = crossroad;
         crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_1});
         crossroad_end->neighbours.push_back({way_ptr_2, crossroad_ptr_2});
@@ -452,15 +452,17 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     else if ( coord_1 == crossroads_.end() )// if no crossroad in way starting point
     {
         std::shared_ptr<Crossroad> crossroad_ptr_2 = coord_2->second;
-        crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_1});
-        coord_2->second->neighbours.push_back({way_ptr_2, crossroad_ptr_2});
+        crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
+        coord_2->second->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
+        crossroad->location = coords.front();
         crossroads_.insert({coords.front(), crossroad});
     }
     else if ( coord_2 == crossroads_.end() )// if no crossroad in way ending point
     {
         std::shared_ptr<Crossroad> crossroad_ptr_2 = coord_1->second;
-        crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_1});
-        coord_1->second->neighbours.push_back({way_ptr_2, crossroad_ptr_2});
+        crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
+        coord_1->second->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
+        crossroad->location = coords.back();
         crossroads_.insert({coords.back(), crossroad});
     }
     else // if crossroads exist in way starting and ending points
@@ -477,8 +479,16 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
 
 std::vector<std::pair<WayID, Coord>> Datastructures::ways_from(Coord xy)
 {
-    // Replace this comment with your implementation
-    return {{NO_WAY, NO_COORD}};
+    std::vector<std::pair<WayID, Coord>> ways_from_crossroad = {};
+    auto crossroad = crossroads_.find(xy);
+    if ( crossroad != crossroads_.end() )
+    {
+        for ( auto &crossroad : crossroads_.at(xy)->neighbours )
+        {
+            ways_from_crossroad.push_back({crossroad.first->id, crossroad.second->location});
+        }
+    }
+    return ways_from_crossroad;
 }
 
 std::vector<Coord> Datastructures::get_way_coords(WayID id)
