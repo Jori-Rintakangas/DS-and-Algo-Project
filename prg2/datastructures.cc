@@ -442,9 +442,9 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     {
         std::shared_ptr<Crossroad> crossroad_end = std::make_shared<Crossroad>
                                  (Crossroad{coords.back(), neighbours, 0, 0, nullptr, nullptr});
-        std::shared_ptr<Crossroad> crossroad_ptr_2 = crossroad;
-        crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_1});
-        crossroad_end->neighbours.push_back({way_ptr_2, crossroad_ptr_2});
+        std::shared_ptr<Crossroad> crossroad_ptr_2 = crossroad_end;
+        crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
+        crossroad_end->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
 
         crossroads_.insert({coords.front(), crossroad});
         crossroads_.insert({coords.back(), crossroad_end});
