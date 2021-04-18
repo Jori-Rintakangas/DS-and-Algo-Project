@@ -16,7 +16,8 @@
 #include <cmath>
 #include <queue>
 #include <QSharedPointer>
-
+#include <stack>
+#include <iostream>
 // Types for IDs
 using PlaceID = long long int;
 using AreaID = long long int;
@@ -35,6 +36,9 @@ int const NO_VALUE = std::numeric_limits<int>::min();
 Name const NO_NAME = "!!NO_NAME!!";
 
 int const MAX_AMOUNT = 3;
+int const WHITE = 1;
+int const GREY = 0;
+int const BLACK = -1;
 // Enumeration for different place types
 // !!Note since this is a C++11 "scoped enumeration", you'll have to refer to
 // individual values as PlaceType::SHELTER etc.
@@ -259,6 +263,10 @@ public:
 
 private:
 
+    Distance dist_so_far = 0;
+
+    bool crossroads_clear = true;
+    bool add_first_ = true;
     bool alphabet_sorted_ = false;
     bool coord_sorted_ = false;
     bool places_valid_ = true;
@@ -305,14 +313,19 @@ private:
         std::vector<std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>>> neighbours;
         Distance dist_from_start;
         int steps_from_start;
-        std::shared_ptr<int> colour;
-        std::shared_ptr<Crossroad> arrived_from;
+        int colour;
+        std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>> arrived_from;
     };
 
     std::unordered_map<Coord, std::shared_ptr<Crossroad>, CoordHash, std::equal_to<Coord>> crossroads_;
     std::unordered_map<WayID, std::shared_ptr<Way>> ways_;
     std::vector<WayID> way_ids_;
 
+    std::vector<std::tuple<Coord, WayID, Distance>> route_;
+
+    void store_path(Coord fromxy, Coord toxy, Distance dist, WayID id);
+    Distance calculate_way_length(std::shared_ptr<Way> way);
+    void clear_crossroads();
 };
 
 #endif // DATASTRUCTURES_HH
