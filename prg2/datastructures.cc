@@ -519,7 +519,7 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_any(Coord
     route_.clear();
     if ( !crossroads_clear )
     {
-        clear_crossroads();
+        reset_crossroads();
     }
     std::stack<std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>>> stack = {};
     stack.push({nullptr, crossroads_.at(fromxy)});
@@ -566,8 +566,50 @@ bool Datastructures::remove_way(WayID id)
 
 std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_least_crossroads(Coord fromxy, Coord toxy)
 {
-    // Replace this comment with your implementation
-    return {{NO_COORD, NO_WAY, NO_DISTANCE}};
+    auto coord_1 = crossroads_.find(fromxy);
+    auto coord_2 = crossroads_.find(toxy);
+    if ( coord_1 == crossroads_.end() || coord_2 == crossroads_.end() )
+    {
+        return {{NO_COORD, NO_WAY, NO_DISTANCE}};
+    }
+    route_.clear();
+    if ( !crossroads_clear )
+    {
+        reset_crossroads();
+    }
+    std::queue<std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>>> queue = {};
+    queue.push({nullptr, crossroads_.at(fromxy)});
+    std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> crossroad;
+    bool route_found = false;
+    while ( !queue.empty() )
+    {
+        crossroad = queue.front();
+        queue.pop();
+        if ( crossroad.second->location == toxy )
+        {
+            route_found = true;
+            break;
+        }
+        for ( auto &neighbour : crossroad.second->neighbours )
+        {
+            if ( neighbour.second->colour == WHITE )
+            {
+                crossroad.first = neighbour.first;
+                neighbour.second->arrived_from = crossroad;
+                neighbour.second->colour = GREY;
+                neighbour.second->steps_from_start += 1;
+                queue.push(neighbour);
+            }
+        }
+        crossroad.second->colour = BLACK;
+    }
+    if ( route_found )
+    {
+        store_path(fromxy, toxy, 0, NO_WAY);
+        dist_so_far = 0;
+    }
+    crossroads_clear = false;
+    return route_;
 }
 
 std::vector<std::tuple<Coord, WayID> > Datastructures::route_with_cycle(Coord fromxy)
@@ -620,12 +662,13 @@ Distance Datastructures::calculate_way_length(std::shared_ptr<Datastructures::Wa
     return dist;
 }
 
-void Datastructures::clear_crossroads()
+void Datastructures::reset_crossroads()
 {
     for ( auto &crossroad : crossroads_ )
     {
         crossroad.second->arrived_from = {};
         crossroad.second->colour = WHITE;
+        crossroad.second->steps_from_start = 0;
     }
     crossroads_clear = true;
 }

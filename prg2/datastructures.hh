@@ -325,7 +325,7 @@ private:
 
     void store_path(Coord fromxy, Coord toxy, Distance dist, WayID id);
     Distance calculate_way_length(std::shared_ptr<Way> way);
-    void clear_crossroads();
+    void reset_crossroads();
 };
 
 #endif // DATASTRUCTURES_HH
