@@ -560,7 +560,55 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_any(Coord
 
 bool Datastructures::remove_way(WayID id)
 {
-    // Replace this comment with your implementation
+    auto way = ways_.find(id);
+    if ( way != ways_.end() )
+    {
+        std::shared_ptr<Crossroad> crossroad_begin = crossroads_.at(way->second->coordinates.front());
+        std::shared_ptr<Crossroad> crossroad_end = crossroads_.at(way->second->coordinates.back());
+        auto crossroad = crossroad_begin;
+        int times = 0;
+        do
+        {
+            if ( crossroad->neighbours.size() == 1 )
+            {
+                auto neighbour = crossroad->neighbours.at(0);
+                for ( auto it = neighbour.second->neighbours.begin(); it !=
+                      neighbour.second->neighbours.end(); ++it)
+                {
+                    if ( neighbour.first->id == id )
+                    {
+                        neighbour.second->neighbours.erase(it);
+                    }
+                }
+                crossroads_.erase(crossroad->location);
+                ways_.erase(id);
+            }
+            else
+            {
+                for ( auto &neighbour : crossroad->neighbours )
+                {
+                    if ( neighbour.first->id == id )
+                    {
+                        std::vector<std::pair<std::shared_ptr<Way>,
+                        std::shared_ptr<Crossroad>>> n = neighbour.second->neighbours;
+                        for ( auto it = n.begin(); it != n.end(); ++it)
+                        {
+                            if ( neighbour.first->id == id )
+                            {
+                                it = n.erase(it);
+                                break;
+                            }
+                        }
+                    }
+                }
+                ways_.erase(id);
+            }
+        ++times;
+        crossroad = crossroad_end;
+        }
+        while ( times < 2);
+        return true;
+    }
     return false;
 }
 
