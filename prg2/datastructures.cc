@@ -430,7 +430,7 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     }
     auto coord_1 = crossroads_.find(coords.front());
     auto coord_2 = crossroads_.find(coords.back());
-    std::shared_ptr<Way> way = std::make_shared<Way>(Way{id, coords, 0, false});
+    std::shared_ptr<Way> way = std::make_shared<Way>(Way{id, coords, std::numeric_limits<int>::max(), false});
     std::shared_ptr<Way> way_ptr_1 = way;
     std::shared_ptr<Way> way_ptr_2 = way;
     std::vector<std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>>> neighbours;
@@ -620,8 +620,70 @@ std::vector<std::tuple<Coord, WayID> > Datastructures::route_with_cycle(Coord fr
 
 std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_shortest_distance(Coord fromxy, Coord toxy)
 {
-    // Replace this comment with your implementation
-    return {{NO_COORD, NO_WAY, NO_DISTANCE}};
+    auto coord_1 = crossroads_.find(fromxy);
+    auto coord_2 = crossroads_.find(toxy);
+    if ( coord_1 == crossroads_.end() || coord_2 == crossroads_.end() )
+    {
+        return {{NO_COORD, NO_WAY, NO_DISTANCE}};
+    }
+    route_.clear();
+    if ( !crossroads_clear )
+    {
+        reset_crossroads();
+    }
+    auto comp = [](std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> a,
+                   std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> b)
+                   {return a.first->length > b.first->length;};
+
+    std::priority_queue<std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>>,
+    std::vector<std::pair<std::shared_ptr<Way>,
+    std::shared_ptr<Crossroad>>>, decltype(comp)> p_queue(comp);
+
+    crossroads_.at(fromxy)->colour = GREY;
+    crossroads_.at(fromxy)->dist_from_start = 0;
+    p_queue.push({nullptr, crossroads_.at(fromxy)});
+
+    std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> crossroad;
+    bool route_found = false;
+    while ( !p_queue.empty() )
+    {
+        crossroad = p_queue.top();
+        p_queue.pop();
+        if ( crossroad.second->colour == BLACK )
+        {
+            continue;
+        }
+        if ( crossroad.second->location == toxy )
+        {
+            route_found = true;
+            break;
+        }
+        for ( auto &neighbour : crossroad.second->neighbours )
+        {
+            neighbour.first->length = calculate_way_length(neighbour.first);
+            Distance d = neighbour.first->length;
+            std::shared_ptr<Crossroad> n = neighbour.second;
+            crossroad.first = neighbour.first;
+            if ( neighbour.second->colour == WHITE )
+            {               
+                neighbour.second->colour = GREY;
+                p_queue.push(neighbour);
+            }
+            if ( n->dist_from_start > crossroad.second->dist_from_start + d )
+            {
+                n->dist_from_start = crossroad.second->dist_from_start + d;
+                n->arrived_from = crossroad;
+            }
+        }
+        crossroad.second->colour = BLACK;
+    }
+    if ( route_found )
+    {
+        store_path(fromxy, toxy, 0, NO_WAY);
+        dist_so_far = 0;
+    }
+    crossroads_clear = false;
+    return route_;
 }
 
 Distance Datastructures::trim_ways()
@@ -642,11 +704,20 @@ void Datastructures::store_path(Coord fromxy, Coord toxy, Distance dist, WayID i
     }
     else
     {
-        store_path(fromxy, crossroads_.at(toxy)->arrived_from.second->location,
-                   dist, crossroads_.at(toxy)->arrived_from.first->id);
-        Distance distance = calculate_way_length(ways_.at(crossroads_.at(toxy)->arrived_from.first->id));
-        dist_so_far += distance;
-        route_.push_back({toxy, id, dist_so_far});
+        if ( crossroads_.at(toxy)->arrived_from.first == nullptr )
+        {
+            store_path(fromxy, crossroads_.at(toxy)->arrived_from.second->location,
+                    dist, id);
+            route_.push_back({toxy, id, dist_so_far});
+        }
+        else
+        {
+            Distance distance = calculate_way_length(ways_.at(crossroads_.at(toxy)->arrived_from.first->id));
+            store_path(fromxy, crossroads_.at(toxy)->arrived_from.second->location,
+                    dist, crossroads_.at(toxy)->arrived_from.first->id);
+            dist_so_far += distance;
+            route_.push_back({toxy, id, dist_so_far});
+        }
     }
 }
 
@@ -657,7 +728,7 @@ Distance Datastructures::calculate_way_length(std::shared_ptr<Datastructures::Wa
     for ( unsigned long long int i = 0; i < v.size() - 1; ++i )
     {
         dist += std::floor(sqrt(pow((v.at(i).x - v.at(i+1).x), 2) +
-                                pow((v.at(i).y - v.at(i+1).y), 2)));
+                               pow((v.at(i).y - v.at(i+1).y), 2)));
     }
     return dist;
 }
@@ -669,6 +740,7 @@ void Datastructures::reset_crossroads()
         crossroad.second->arrived_from = {};
         crossroad.second->colour = WHITE;
         crossroad.second->steps_from_start = 0;
+        crossroad.second->dist_from_start = std::numeric_limits<int>::max();
     }
     crossroads_clear = true;
 }
