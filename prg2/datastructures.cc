@@ -565,48 +565,26 @@ bool Datastructures::remove_way(WayID id)
     {
         std::shared_ptr<Crossroad> crossroad_begin = crossroads_.at(way->second->coordinates.front());
         std::shared_ptr<Crossroad> crossroad_end = crossroads_.at(way->second->coordinates.back());
-        auto crossroad = crossroad_begin;
-        int times = 0;
-        do
+
+        crossroad_begin->neighbours.erase(std::remove_if(crossroad_begin->neighbours.begin(),
+        crossroad_begin->neighbours.end(),
+        [id](std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>> p){return p.first->id == id;}),
+        crossroad_begin->neighbours.end());
+
+        crossroad_end->neighbours.erase(std::remove_if(crossroad_end->neighbours.begin(),
+        crossroad_end->neighbours.end(),
+        [id](std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>> p){return p.first->id == id;}),
+        crossroad_end->neighbours.end());
+        if ( crossroad_begin->neighbours.size() == 0 )
         {
-            if ( crossroad->neighbours.size() == 1 )
-            {
-                auto neighbour = crossroad->neighbours.at(0);
-                for ( auto it = neighbour.second->neighbours.begin(); it !=
-                      neighbour.second->neighbours.end(); ++it)
-                {
-                    if ( neighbour.first->id == id )
-                    {
-                        neighbour.second->neighbours.erase(it);
-                    }
-                }
-                crossroads_.erase(crossroad->location);
-                ways_.erase(id);
-            }
-            else
-            {
-                for ( auto &neighbour : crossroad->neighbours )
-                {
-                    if ( neighbour.first->id == id )
-                    {
-                        std::vector<std::pair<std::shared_ptr<Way>,
-                        std::shared_ptr<Crossroad>>> n = neighbour.second->neighbours;
-                        for ( auto it = n.begin(); it != n.end(); ++it)
-                        {
-                            if ( neighbour.first->id == id )
-                            {
-                                it = n.erase(it);
-                                break;
-                            }
-                        }
-                    }
-                }
-                ways_.erase(id);
-            }
-        ++times;
-        crossroad = crossroad_end;
+            crossroads_.erase(crossroad_begin->location);
         }
-        while ( times < 2);
+        if ( crossroad_end->neighbours.size() == 0 )
+        {
+            crossroads_.erase(crossroad_end->location);
+        }
+        ways_.erase(id);
+
         return true;
     }
     return false;
