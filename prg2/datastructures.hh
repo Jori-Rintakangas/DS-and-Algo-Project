@@ -319,6 +319,7 @@ private:
         int steps_from_start;
         int colour;
         std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>> arrived_from;
+        bool in_mst;
     };
 
     std::unordered_map<Coord, std::shared_ptr<Crossroad>, CoordHash, std::equal_to<Coord>> crossroads_;
