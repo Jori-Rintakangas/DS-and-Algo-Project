@@ -314,16 +314,16 @@ private:
     struct Crossroad
     {
         Coord location;
-        std::vector<std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>>> neighbours;
+        std::vector<std::pair<Way*, Crossroad*>> neighbours;
         Distance dist_from_start;
         int steps_from_start;
         int colour;
-        std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>> arrived_from;
+        std::pair<Way*, Crossroad*> arrived_from;
         bool in_mst;
     };
 
-    std::unordered_map<Coord, std::shared_ptr<Crossroad>, CoordHash, std::equal_to<Coord>> crossroads_;
-    std::unordered_map<WayID, std::shared_ptr<Way>> ways_;
+    std::unordered_map<Coord, Crossroad*, CoordHash, std::equal_to<Coord>> crossroads_;
+    std::unordered_map<WayID, Way*> ways_;
     std::vector<WayID> way_ids_;
 
     std::vector<std::tuple<Coord, WayID, Distance>> route_;
@@ -331,9 +331,9 @@ private:
 
     void store_path(Coord fromxy, Coord toxy, Distance dist, WayID id);
     void store_cycle_path(Coord fromxy, Coord toxy, WayID id);
-    Distance calculate_way_length(std::shared_ptr<Way> way);
+    Distance calculate_way_length(Way* way);
     void reset_crossroads();
-    void execute_dfs_search(std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> crossroad);
+    void execute_dfs_search(std::pair<Way*, Crossroad*> crossroad);
 
 };
 

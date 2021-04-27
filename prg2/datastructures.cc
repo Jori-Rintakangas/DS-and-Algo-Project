@@ -31,7 +31,14 @@ Datastructures::Datastructures()
 
 Datastructures::~Datastructures()
 {
-    // Replace this comment with your implementation
+    for ( auto &way : ways_ )
+    {
+        delete way.second;
+    }
+    for ( auto &crossroad : crossroads_ )
+    {
+        delete crossroad.second;
+    }
 }
 
 int Datastructures::place_count()
@@ -435,13 +442,17 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     }
     auto coord_1 = crossroads_.find(coords.front());
     auto coord_2 = crossroads_.find(coords.back());
-    std::shared_ptr<Way> way = std::make_shared<Way>(Way{id, coords, std::numeric_limits<int>::max(), false});
-    std::shared_ptr<Way> way_ptr_1 = way;
-    std::shared_ptr<Way> way_ptr_2 = way;
-    std::vector<std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>>> neighbours;
-    std::shared_ptr<Crossroad> crossroad = std::make_shared<Crossroad>
-            (Crossroad{coords.front(), neighbours, 0, 0, WHITE, {}, false});
-    std::shared_ptr<Crossroad> crossroad_ptr_1 = crossroad;
+    Way* way_info = new Way{id, coords, std::numeric_limits<int>::max(), false};
+    Way* way = way_info;
+    Way* way_ptr_1 = way_info;
+    Way* way_ptr_2 = way_info;
+
+    std::vector<std::pair<Way*,Crossroad*>> neighbours;
+
+    Crossroad* crossroad_info = new Crossroad{coords.front(), neighbours, 0, 0, WHITE, {}, false};
+    Crossroad* crossroad = crossroad_info;
+    Crossroad* crossroad_ptr_1 = crossroad_info;
+
     // if no crossroad exist in way starting and ending points
     if ( coord_1 == crossroads_.end() && coord_2 == crossroads_.end() )
     {
@@ -452,19 +463,18 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
         }
         else
         {
-            std::shared_ptr<Crossroad> crossroad_end = std::make_shared<Crossroad>
-                    (Crossroad{coords.back(), neighbours, 0, 0, WHITE, {}, false});
-            std::shared_ptr<Crossroad> crossroad_ptr_2 = crossroad_end;
+            Crossroad* crossroad_end_info = new Crossroad{coords.back(), neighbours, 0, 0, WHITE, {}, false};
+            Crossroad* crossroad_end = crossroad_end_info;
+            Crossroad* crossroad_ptr_2 = crossroad_end_info;
             crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
             crossroad_end->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
-
             crossroads_.insert({coords.front(), crossroad});
             crossroads_.insert({coords.back(), crossroad_end});
         }
     }
     else if ( coord_1 == crossroads_.end() )// if no crossroad in way starting point
     {
-        std::shared_ptr<Crossroad> crossroad_ptr_2 = coord_2->second;
+        Crossroad* crossroad_ptr_2 = coord_2->second;
         crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
         coord_2->second->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
         crossroad->location = coords.front();
@@ -472,7 +482,7 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     }
     else if ( coord_2 == crossroads_.end() )// if no crossroad in way ending point
     {
-        std::shared_ptr<Crossroad> crossroad_ptr_2 = coord_1->second;
+        Crossroad* crossroad_ptr_2 = coord_1->second;
         crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
         coord_1->second->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
         crossroad->location = coords.back();
@@ -480,17 +490,18 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     }
     else // if crossroads exist in way starting and ending points
     {
-        std::shared_ptr<Crossroad> crossroad_ptr_1 = coord_1->second;
+        Crossroad* crossroad_ptr_1 = coord_1->second;
         if ( coords.front() == coords.back() )
         {
             coord_1->second->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
         }
         else
         {
-            std::shared_ptr<Crossroad> crossroad_ptr_2 = coord_2->second;
+            Crossroad* crossroad_ptr_2 = coord_2->second;
             coord_1->second->neighbours.push_back({way_ptr_2, crossroad_ptr_2});
             coord_2->second->neighbours.push_back({way_ptr_1, crossroad_ptr_1});
         }
+        delete crossroad_info;
 
     }
     ways_.insert({id, way});
@@ -523,11 +534,19 @@ std::vector<Coord> Datastructures::get_way_coords(WayID id)
 
 void Datastructures::clear_ways()
 {
+    for ( auto &way : ways_ )
+    {
+        delete way.second;
+    }
+    for ( auto &crossroad : crossroads_ )
+    {
+        delete crossroad.second;
+    }
     ways_.clear();
     crossroads_.clear();
 }
 
-std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_any(Coord fromxy, Coord toxy)
+std::vector<std::tuple<Coord, WayID, Distance>> Datastructures::route_any(Coord fromxy, Coord toxy)
 {
     auto coord_1 = crossroads_.find(fromxy);
     auto coord_2 = crossroads_.find(toxy);
@@ -540,9 +559,9 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_any(Coord
     {
         reset_crossroads();
     }
-    std::stack<std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>>> stack = {};
+    std::stack<std::pair<Way*, Crossroad*>> stack = {};
     stack.push({nullptr, crossroads_.at(fromxy)});
-    std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> crossroad;
+    std::pair<Way*, Crossroad*> crossroad;
     bool route_found = false;
     while ( !stack.empty() )
     {
@@ -582,26 +601,29 @@ bool Datastructures::remove_way(WayID id)
     auto way = ways_.find(id);
     if ( way != ways_.end() )
     {
-        std::shared_ptr<Crossroad> crossroad_begin = crossroads_.at(way->second->coordinates.front());
-        std::shared_ptr<Crossroad> crossroad_end = crossroads_.at(way->second->coordinates.back());
+        Crossroad* crossroad_begin = crossroads_.at(way->second->coordinates.front());
+        Crossroad* crossroad_end = crossroads_.at(way->second->coordinates.back());
 
         crossroad_begin->neighbours.erase(std::remove_if(crossroad_begin->neighbours.begin(),
         crossroad_begin->neighbours.end(),
-        [id](std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>> p){return p.first->id == id;}),
+        [id](std::pair<Way*, Crossroad*> p){return p.first->id == id;}),
         crossroad_begin->neighbours.end());
 
         crossroad_end->neighbours.erase(std::remove_if(crossroad_end->neighbours.begin(),
         crossroad_end->neighbours.end(),
-        [id](std::pair<std::shared_ptr<Way>,std::shared_ptr<Crossroad>> p){return p.first->id == id;}),
+        [id](std::pair<Way*, Crossroad*> p){return p.first->id == id;}),
         crossroad_end->neighbours.end());
         if ( crossroad_begin->neighbours.size() == 0 )
         {
             crossroads_.erase(crossroad_begin->location);
+            delete crossroad_begin;
         }
         if ( crossroad_end->neighbours.size() == 0 )
         {
             crossroads_.erase(crossroad_end->location);
+            delete crossroad_end;
         }
+        delete ways_.at(id);
         ways_.erase(id);
 
         return true;
@@ -622,9 +644,9 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_least_cro
     {
         reset_crossroads();
     }
-    std::queue<std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>>> queue = {};
+    std::queue<std::pair<Way*, Crossroad*>> queue = {};
     queue.push({nullptr, crossroads_.at(fromxy)});
-    std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> crossroad;
+    std::pair<Way*, Crossroad*> crossroad;
     bool route_found = false;
     while ( !queue.empty() )
     {
@@ -657,7 +679,7 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_least_cro
     return route_;
 }
 
-std::vector<std::tuple<Coord, WayID> > Datastructures::route_with_cycle(Coord fromxy)
+std::vector<std::tuple<Coord, WayID>> Datastructures::route_with_cycle(Coord fromxy)
 {
     auto coord = crossroads_.find(fromxy);
     if ( coord == crossroads_.end() )
@@ -669,7 +691,7 @@ std::vector<std::tuple<Coord, WayID> > Datastructures::route_with_cycle(Coord fr
     {
         reset_crossroads();
     }
-    std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> crossroad = {nullptr, crossroads_.at(fromxy)};
+    std::pair<Way*, Crossroad*> crossroad = {nullptr, crossroads_.at(fromxy)};
     execute_dfs_search(crossroad);
     if ( cycle_found_ )
     {
@@ -697,19 +719,18 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_shortest_
     {
         reset_crossroads();
     }
-    auto comp = [](std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> a,
-                   std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> b)
+    auto comp = [](std::pair<Way*, Crossroad*> a,
+                   std::pair<Way*, Crossroad*> b)
                    {return a.first->length > b.first->length;};
 
-    std::priority_queue<std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>>,
-    std::vector<std::pair<std::shared_ptr<Way>,
-    std::shared_ptr<Crossroad>>>, decltype(comp)> p_queue(comp);
+    std::priority_queue<std::pair<Way*, Crossroad*>,
+    std::vector<std::pair<Way*, Crossroad*>>, decltype(comp)> p_queue(comp);
 
     crossroads_.at(fromxy)->colour = GREY;
     crossroads_.at(fromxy)->dist_from_start = 0;
     p_queue.push({nullptr, crossroads_.at(fromxy)});
 
-    std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> crossroad;
+    std::pair<Way*, Crossroad*> crossroad;
     bool route_found = false;
     while ( !p_queue.empty() )
     {
@@ -728,10 +749,10 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_shortest_
         {
             neighbour.first->length = calculate_way_length(neighbour.first);
             Distance d = neighbour.first->length;
-            std::shared_ptr<Crossroad> n = neighbour.second;
+            Crossroad* n = neighbour.second;
             crossroad.first = neighbour.first;
             if ( neighbour.second->colour == WHITE )
-            {               
+            {
                 neighbour.second->colour = GREY;
                 p_queue.push(neighbour);
             }
@@ -759,18 +780,18 @@ Distance Datastructures::trim_ways()
         reset_crossroads();
     }
     auto crossroads_to_check = crossroads_;
-    auto comp = [](std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> a,
-                   std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> b)
+    auto comp = [](std::pair<Way*, Crossroad*> a,
+                   std::pair<Way*, Crossroad*> b)
                    {return a.first->length > b.first->length;};
     std::vector<WayID> ways_to_remove = {};
-    std::priority_queue<std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>>,
-    std::vector<std::pair<std::shared_ptr<Way>,
-    std::shared_ptr<Crossroad>>>, decltype(comp)> p_queue(comp);
+    std::priority_queue<std::pair<Way*, Crossroad*>,
+    std::vector<std::pair<Way*, Crossroad*>>, decltype(comp)> p_queue(comp);
+
     auto start_crossroad = crossroads_.begin()->second;
     start_crossroad->colour = GREY;
     start_crossroad->dist_from_start = 0;
     p_queue.push({nullptr, start_crossroad});
-    std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> crossroad;
+    std::pair<Way*, Crossroad*> crossroad;
     Distance mst_length = 0;
     bool first = true;
     while ( !p_queue.empty() )
@@ -877,7 +898,7 @@ void Datastructures::store_cycle_path(Coord fromxy, Coord toxy, WayID id)
     }
 }
 
-Distance Datastructures::calculate_way_length(std::shared_ptr<Datastructures::Way> way)
+Distance Datastructures::calculate_way_length(Way* way)
 {
     Distance dist = 0;
     std::vector<Coord> v = way->coordinates;
@@ -902,7 +923,7 @@ void Datastructures::reset_crossroads()
     crossroads_clear = true;
 }
 
-void Datastructures::execute_dfs_search(std::pair<std::shared_ptr<Way>, std::shared_ptr<Crossroad>> crossroad)
+void Datastructures::execute_dfs_search(std::pair<Way*, Crossroad*> crossroad)
 {
     crossroad.second->colour = GREY;
     for ( auto &neighbour : crossroad.second->neighbours )
@@ -927,5 +948,6 @@ void Datastructures::execute_dfs_search(std::pair<std::shared_ptr<Way>, std::sha
     }
     crossroad.second->colour = BLACK;
 }
+
 
 
