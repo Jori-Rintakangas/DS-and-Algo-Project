@@ -559,38 +559,35 @@ std::vector<std::tuple<Coord, WayID, Distance>> Datastructures::route_any(Coord 
     {
         reset_crossroads();
     }
-    std::stack<std::pair<Way*, Crossroad*>> stack = {};
-    stack.push({nullptr, crossroads_.at(fromxy)});
+    std::queue<std::pair<Way*, Crossroad*>> queue = {};
+    queue.push({nullptr, crossroads_.at(fromxy)});
     std::pair<Way*, Crossroad*> crossroad;
     bool route_found = false;
-    while ( !stack.empty() )
+    while ( !queue.empty() )
     {
-        crossroad = stack.top();
-        stack.pop();
-        if ( crossroad.second->colour == WHITE )
+        crossroad = queue.front();
+        queue.pop();
+        if ( crossroad.second->location == toxy )
         {
-            crossroad.second->colour = GREY;
-            stack.push(crossroad);
-            if ( crossroad.second->location == toxy )
+            route_found = true;
+            break;
+        }
+        for ( auto &neighbour : crossroad.second->neighbours )
+        {
+            if ( neighbour.second->colour == WHITE )
             {
-                route_found = true;
-                break;
-            }
-            for ( auto &neighbour : crossroad.second->neighbours )
-            {
-                if ( neighbour.second->colour == WHITE )
-                {
-                    crossroad.first = neighbour.first;
-                    neighbour.second->arrived_from = crossroad;
-                    stack.push(neighbour);
-                }
+                crossroad.first = neighbour.first;
+                neighbour.second->arrived_from = crossroad;
+                neighbour.second->colour = GREY;
+                queue.push(neighbour);
             }
         }
+        crossroad.second->colour = BLACK;
     }
     if ( route_found )
     {
         store_path(fromxy, toxy, 0, NO_WAY);
-        dist_so_far = 0;
+        dist_so_far_ = 0;
     }
     crossroads_clear = false;
     return route_;
@@ -673,7 +670,7 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_least_cro
     if ( route_found )
     {
         store_path(fromxy, toxy, 0, NO_WAY);
-        dist_so_far = 0;
+        dist_so_far_ = 0;
     }
     crossroads_clear = false;
     return route_;
@@ -764,7 +761,7 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_shortest_
     if ( route_found )
     {
         store_path(fromxy, toxy, 0, NO_WAY);
-        dist_so_far = 0;
+        dist_so_far_ = 0;
     }
     crossroads_clear = false;
     return route_;
@@ -856,15 +853,15 @@ void Datastructures::store_path(Coord fromxy, Coord toxy, Distance dist, WayID i
         {
             store_path(fromxy, crossroads_.at(toxy)->arrived_from.second->location,
                     dist, id);
-            route_.push_back({toxy, id, dist_so_far});
+            route_.push_back({toxy, id, dist_so_far_});
         }
         else
         {
             Distance distance = calculate_way_length(ways_.at(crossroads_.at(toxy)->arrived_from.first->id));
             store_path(fromxy, crossroads_.at(toxy)->arrived_from.second->location,
                     dist, crossroads_.at(toxy)->arrived_from.first->id);
-            dist_so_far += distance;
-            route_.push_back({toxy, id, dist_so_far});
+            dist_so_far_ += distance;
+            route_.push_back({toxy, id, dist_so_far_});
         }
     }
 }
@@ -922,6 +919,5 @@ void Datastructures::execute_dfs_search(std::pair<Way*, Crossroad*> crossroad)
     }
     crossroad.second->colour = BLACK;
 }
-
 
 

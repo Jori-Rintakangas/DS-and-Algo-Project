@@ -263,7 +263,7 @@ public:
 
 private:
 
-    Distance dist_so_far = 0;
+    Distance dist_so_far_ = 0;
     WayID cycle_way_ = NO_WAY;
     Coord cycle_end_ = {0,0};
     Coord cycle_coord_ = {0,0};
