@@ -695,13 +695,10 @@ std::vector<std::tuple<Coord, WayID>> Datastructures::route_with_cycle(Coord fro
     execute_dfs_search(crossroad);
     if ( cycle_found_ )
     {
-        store_cycle_path(fromxy, cycle_end_, cycle_way_);
+        std::reverse(cycle_route_.begin(), cycle_route_.end());
         cycle_route_.push_back({cycle_coord_, NO_WAY});
     }
     cycle_found_ = false;
-    cycle_way_ = NO_WAY;
-    cycle_end_ = {0,0};
-    cycle_coord_ = {0,0};
     crossroads_clear = false;
     return cycle_route_;
 }
@@ -872,32 +869,6 @@ void Datastructures::store_path(Coord fromxy, Coord toxy, Distance dist, WayID i
     }
 }
 
-void Datastructures::store_cycle_path(Coord fromxy, Coord toxy, WayID id)
-{
-    if ( crossroads_.at(fromxy) == crossroads_.at(toxy) )
-    {
-        cycle_route_.push_back({fromxy, id});
-    }
-    else if ( crossroads_.at(toxy)->arrived_from.second == nullptr )
-    {
-        return;
-    }
-    else
-    {
-        if ( crossroads_.at(toxy)->arrived_from.first == nullptr )
-        {
-            store_cycle_path(fromxy, crossroads_.at(toxy)->arrived_from.second->location, id);
-            cycle_route_.push_back({toxy, id,});
-        }
-        else
-        {
-            store_cycle_path(fromxy, crossroads_.at(toxy)->arrived_from.second->location,
-                        crossroads_.at(toxy)->arrived_from.first->id);
-            cycle_route_.push_back({toxy, id});
-        }
-    }
-}
-
 Distance Datastructures::calculate_way_length(Way* way)
 {
     Distance dist = 0;
@@ -937,13 +908,16 @@ void Datastructures::execute_dfs_search(std::pair<Way*, Crossroad*> crossroad)
             crossroad.first = neighbour.first;
             neighbour.second->arrived_from = crossroad;
             execute_dfs_search(neighbour);
+            if ( cycle_found_ )
+            {
+                cycle_route_.push_back({crossroad.second->location, crossroad.first->id});
+            }
         }
         else if ( neighbour.second->colour == GREY && crossroad.second->arrived_from.first != neighbour.first )
         {
-            cycle_end_ = crossroad.second->location;
             cycle_coord_ = neighbour.second->location;
-            cycle_way_ = neighbour.first->id;
             cycle_found_ = true;
+            cycle_route_.push_back({crossroad.second->location, neighbour.first->id});
         }
     }
     crossroad.second->colour = BLACK;

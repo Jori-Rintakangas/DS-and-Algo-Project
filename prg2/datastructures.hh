@@ -330,7 +330,6 @@ private:
     std::vector<std::tuple<Coord, WayID>> cycle_route_;
 
     void store_path(Coord fromxy, Coord toxy, Distance dist, WayID id);
-    void store_cycle_path(Coord fromxy, Coord toxy, WayID id);
     Distance calculate_way_length(Way* way);
     void reset_crossroads();
     void execute_dfs_search(std::pair<Way*, Crossroad*> crossroad);
