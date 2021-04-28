@@ -308,7 +308,6 @@ private:
         WayID id;
         std::vector<Coord> coordinates;
         Distance length;
-        bool length_valid;
     };
 
     struct Crossroad

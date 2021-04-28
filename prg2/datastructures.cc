@@ -442,14 +442,16 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     }
     auto coord_1 = crossroads_.find(coords.front());
     auto coord_2 = crossroads_.find(coords.back());
-    Way* way_info = new Way{id, coords, std::numeric_limits<int>::max(), false};
+    Way* way_info = new Way{id, coords, 0};
+    way_info->length = calculate_way_length(way_info);
     Way* way = way_info;
     Way* way_ptr_1 = way_info;
     Way* way_ptr_2 = way_info;
 
     std::vector<std::pair<Way*,Crossroad*>> neighbours;
 
-    Crossroad* crossroad_info = new Crossroad{coords.front(), neighbours, 0, 0, WHITE, {}, false};
+    Crossroad* crossroad_info = new Crossroad{coords.front(), neighbours,
+    std::numeric_limits<int>::max(), 0, WHITE, {nullptr, nullptr}, false};
     Crossroad* crossroad = crossroad_info;
     Crossroad* crossroad_ptr_1 = crossroad_info;
 
@@ -463,7 +465,8 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
         }
         else
         {
-            Crossroad* crossroad_end_info = new Crossroad{coords.back(), neighbours, 0, 0, WHITE, {}, false};
+            Crossroad* crossroad_end_info = new Crossroad{coords.back(), neighbours,
+            std::numeric_limits<int>::max(), 0, WHITE, {nullptr, nullptr}, false};
             Crossroad* crossroad_end = crossroad_end_info;
             Crossroad* crossroad_ptr_2 = crossroad_end_info;
             crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
@@ -502,7 +505,6 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
             coord_2->second->neighbours.push_back({way_ptr_1, crossroad_ptr_1});
         }
         delete crossroad_info;
-
     }
     ways_.insert({id, way});
     return true;
@@ -713,9 +715,8 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_shortest_
     {
         reset_crossroads();
     }
-    auto comp = [](std::pair<Way*, Crossroad*> a,
-                   std::pair<Way*, Crossroad*> b)
-                   {return a.first->length > b.first->length;};
+    auto comp = [](std::pair<Way*,Crossroad*> a, std::pair<Way*,Crossroad*> b)
+              {return a.second->dist_from_start > b.second->dist_from_start;};
 
     std::priority_queue<std::pair<Way*, Crossroad*>,
     std::vector<std::pair<Way*, Crossroad*>>, decltype(comp)> p_queue(comp);
@@ -730,18 +731,17 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_shortest_
     {
         crossroad = p_queue.top();
         p_queue.pop();
-        if ( crossroad.second->colour == BLACK )
-        {
-            continue;
-        }
         if ( crossroad.second->location == toxy )
         {
             route_found = true;
             break;
         }
+        if ( crossroad.second->colour == BLACK )
+        {
+            continue;
+        }
         for ( auto &neighbour : crossroad.second->neighbours )
         {
-            neighbour.first->length = calculate_way_length(neighbour.first);
             Distance d = neighbour.first->length;
             Crossroad* n = neighbour.second;
             crossroad.first = neighbour.first;
@@ -774,9 +774,8 @@ Distance Datastructures::trim_ways()
         reset_crossroads();
     }
     auto crossroads_to_check = crossroads_;
-    auto comp = [](std::pair<Way*, Crossroad*> a,
-                   std::pair<Way*, Crossroad*> b)
-                   {return a.first->length > b.first->length;};
+    auto comp = [](std::pair<Way*, Crossroad*> a,std::pair<Way*, Crossroad*> b)
+                {return a.first->length > b.first->length;};
     std::vector<WayID> ways_to_remove = {};
     std::priority_queue<std::pair<Way*, Crossroad*>,
     std::vector<std::pair<Way*, Crossroad*>>, decltype(comp)> p_queue(comp);
@@ -811,7 +810,6 @@ Distance Datastructures::trim_ways()
             {
                 if ( n.second->in_mst == false )
                 {
-                    n.first->length = calculate_way_length(n.first);
                     p_queue.push(n);
                 }
                 else if ( crossroad.first->id != n.first->id )
@@ -857,7 +855,7 @@ void Datastructures::store_path(Coord fromxy, Coord toxy, Distance dist, WayID i
         }
         else
         {
-            Distance distance = calculate_way_length(ways_.at(crossroads_.at(toxy)->arrived_from.first->id));
+            Distance distance = crossroads_.at(toxy)->arrived_from.first->length;
             store_path(fromxy, crossroads_.at(toxy)->arrived_from.second->location,
                     dist, crossroads_.at(toxy)->arrived_from.first->id);
             dist_so_far_ += distance;
@@ -882,7 +880,7 @@ void Datastructures::reset_crossroads()
 {
     for ( auto &crossroad : crossroads_ )
     {
-        crossroad.second->arrived_from = {};
+        crossroad.second->arrived_from = {nullptr, nullptr};
         crossroad.second->colour = WHITE;
         crossroad.second->steps_from_start = 0;
         crossroad.second->dist_from_start = std::numeric_limits<int>::max();
