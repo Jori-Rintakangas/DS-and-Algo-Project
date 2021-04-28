@@ -814,6 +814,10 @@ Distance Datastructures::trim_ways()
                 {
                     p_queue.push(n);
                 }
+                else if ( crossroad.second->location == n.second->location )
+                {
+                    ways_to_remove.push_back(n.first->id);
+                }
                 else if ( crossroad.first->id != n.first->id )
                 {
                     ways_to_remove.push_back(n.first->id);
