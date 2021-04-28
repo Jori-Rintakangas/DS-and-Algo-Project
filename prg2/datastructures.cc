@@ -715,48 +715,50 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_shortest_
     {
         reset_crossroads();
     }
-    auto comp = [](std::pair<Way*,Crossroad*> a, std::pair<Way*,Crossroad*> b)
-              {return a.second->dist_from_start > b.second->dist_from_start;};
+    auto comp = [](std::tuple<Distance,Way*,Crossroad*> a,
+                   std::tuple<Distance,Way*,Crossroad*> b)
+                   {return std::get<0>(a) > std::get<0>(b);};
 
-    std::priority_queue<std::pair<Way*, Crossroad*>,
-    std::vector<std::pair<Way*, Crossroad*>>, decltype(comp)> p_queue(comp);
+    std::priority_queue<std::tuple<Distance, Way*, Crossroad*>,
+    std::vector<std::tuple<Distance, Way*, Crossroad*>>, decltype(comp)> p_queue(comp);
 
     crossroads_.at(fromxy)->colour = GREY;
     crossroads_.at(fromxy)->dist_from_start = 0;
-    p_queue.push({nullptr, crossroads_.at(fromxy)});
+    p_queue.push({0, nullptr, crossroads_.at(fromxy)});
 
-    std::pair<Way*, Crossroad*> crossroad;
+    std::tuple<Distance, Way*, Crossroad*> crossroad;
     bool route_found = false;
     while ( !p_queue.empty() )
     {
         crossroad = p_queue.top();
         p_queue.pop();
-        if ( crossroad.second->location == toxy )
+        if ( std::get<2>(crossroad)->location == toxy )
         {
             route_found = true;
             break;
         }
-        if ( crossroad.second->colour == BLACK )
+        if ( std::get<2>(crossroad)->colour == BLACK )
         {
             continue;
         }
-        for ( auto &neighbour : crossroad.second->neighbours )
+        for ( auto &neighbour : std::get<2>(crossroad)->neighbours )
         {
             Distance d = neighbour.first->length;
             Crossroad* n = neighbour.second;
-            crossroad.first = neighbour.first;
+            std::get<1>(crossroad) = neighbour.first;
             if ( neighbour.second->colour == WHITE )
             {
                 neighbour.second->colour = GREY;
-                p_queue.push(neighbour);
+                p_queue.push({n->dist_from_start, neighbour.first, neighbour.second});
             }
-            if ( n->dist_from_start > crossroad.second->dist_from_start + d )
+            if ( n->dist_from_start > std::get<2>(crossroad)->dist_from_start + d )
             {
-                n->dist_from_start = crossroad.second->dist_from_start + d;
-                n->arrived_from = crossroad;
+                n->dist_from_start = std::get<2>(crossroad)->dist_from_start + d;
+                n->arrived_from = {std::get<1>(crossroad), std::get<2>(crossroad)};
+                p_queue.push({n->dist_from_start, neighbour.first, neighbour.second});
             }
         }
-        crossroad.second->colour = BLACK;
+        std::get<2>(crossroad)->colour = BLACK;
     }
     if ( route_found )
     {
