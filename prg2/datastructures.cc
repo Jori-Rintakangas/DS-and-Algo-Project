@@ -442,69 +442,60 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     }
     auto coord_1 = crossroads_.find(coords.front());
     auto coord_2 = crossroads_.find(coords.back());
-    Way* way_info = new Way{id, coords, 0};
-    way_info->length = calculate_way_length(way_info);
-    Way* way = way_info;
-    Way* way_ptr_1 = way_info;
-    Way* way_ptr_2 = way_info;
 
-    std::vector<std::pair<Way*,Crossroad*>> neighbours;
+    Way* way = new Way{id, coords, 0};
+    way->length = calculate_way_length(way);
+    Crossroad* crossroad = new Crossroad
+    {coords.front(), {}, INF, 0, WHITE, {nullptr, nullptr}, false};
 
-    Crossroad* crossroad_info = new Crossroad{coords.front(), neighbours,
-    std::numeric_limits<int>::max(), 0, WHITE, {nullptr, nullptr}, false};
-    Crossroad* crossroad = crossroad_info;
-    Crossroad* crossroad_ptr_1 = crossroad_info;
-
-    // if no crossroad exist in way starting and ending points
+    //if no crossroad exist in way starting and ending points
     if ( coord_1 == crossroads_.end() && coord_2 == crossroads_.end() )
     {
         if ( coords.front() == coords.back() )
         {
-            crossroad->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
+            crossroad->neighbours.push_back({way, crossroad});
             crossroads_.insert({coords.front(), crossroad});
         }
         else
         {
-            Crossroad* crossroad_end_info = new Crossroad{coords.back(), neighbours,
-            std::numeric_limits<int>::max(), 0, WHITE, {nullptr, nullptr}, false};
-            Crossroad* crossroad_end = crossroad_end_info;
-            Crossroad* crossroad_ptr_2 = crossroad_end_info;
-            crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
-            crossroad_end->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
+            Crossroad* crossroad_end = new Crossroad
+            {coords.back(), {}, INF, 0, WHITE, {nullptr, nullptr}, false};
+            crossroad->neighbours.push_back({way, crossroad_end});
+            crossroad_end->neighbours.push_back({way, crossroad});
             crossroads_.insert({coords.front(), crossroad});
             crossroads_.insert({coords.back(), crossroad_end});
         }
     }
-    else if ( coord_1 == crossroads_.end() )// if no crossroad in way starting point
+    else if ( coord_1 == crossroads_.end() )//if no crossroad in way starting point
     {
-        Crossroad* crossroad_ptr_2 = coord_2->second;
-        crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
-        coord_2->second->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
+        Crossroad* crossroad_end = coord_2->second;
+        crossroad->neighbours.push_back({way, crossroad_end});
+        crossroad_end->neighbours.push_back({way, crossroad});
         crossroad->location = coords.front();
         crossroads_.insert({coords.front(), crossroad});
     }
-    else if ( coord_2 == crossroads_.end() )// if no crossroad in way ending point
+    else if ( coord_2 == crossroads_.end() )//if no crossroad in way ending point
     {
-        Crossroad* crossroad_ptr_2 = coord_1->second;
-        crossroad->neighbours.push_back({way_ptr_1, crossroad_ptr_2});
-        coord_1->second->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
+        Crossroad* crossroad_begin = coord_1->second;
+        crossroad->neighbours.push_back({way, crossroad_begin});
+        crossroad_begin->neighbours.push_back({way, crossroad});
         crossroad->location = coords.back();
         crossroads_.insert({coords.back(), crossroad});
     }
-    else // if crossroads exist in way starting and ending points
+    else //if crossroads exist in way starting and ending points
     {
-        Crossroad* crossroad_ptr_1 = coord_1->second;
+        Crossroad* crossroad_begin = coord_1->second;
         if ( coords.front() == coords.back() )
         {
-            coord_1->second->neighbours.push_back({way_ptr_2, crossroad_ptr_1});
+            crossroad_begin->neighbours.push_back({way, crossroad_begin});
         }
         else
         {
-            Crossroad* crossroad_ptr_2 = coord_2->second;
-            coord_1->second->neighbours.push_back({way_ptr_2, crossroad_ptr_2});
-            coord_2->second->neighbours.push_back({way_ptr_1, crossroad_ptr_1});
+            Crossroad* crossroad_end = coord_2->second;
+            crossroad_begin->neighbours.push_back({way, crossroad_end});
+            crossroad_end->neighbours.push_back({way, crossroad_begin});
         }
-        delete crossroad_info;
+        delete crossroad; //if there was no need for new crossroad
     }
     ways_.insert({id, way});
     return true;
@@ -771,6 +762,10 @@ std::vector<std::tuple<Coord, WayID, Distance> > Datastructures::route_shortest_
 
 Distance Datastructures::trim_ways()
 {
+    if ( crossroads_.empty() )
+    {
+        return 0;
+    }
     if ( !crossroads_clear )
     {
         reset_crossroads();
@@ -877,7 +872,7 @@ Distance Datastructures::calculate_way_length(Way* way)
     for ( unsigned long long int i = 0; i < v.size() - 1; ++i )
     {
         dist += std::floor(sqrt(pow((v.at(i).x - v.at(i+1).x), 2) +
-                               pow((v.at(i).y - v.at(i+1).y), 2)));
+                                pow((v.at(i).y - v.at(i+1).y), 2)));
     }
     return dist;
 }
@@ -889,7 +884,7 @@ void Datastructures::reset_crossroads()
         crossroad.second->arrived_from = {nullptr, nullptr};
         crossroad.second->colour = WHITE;
         crossroad.second->steps_from_start = 0;
-        crossroad.second->dist_from_start = std::numeric_limits<int>::max();
+        crossroad.second->dist_from_start = INF;
         crossroad.second->in_mst = false;
     }
     crossroads_clear = true;

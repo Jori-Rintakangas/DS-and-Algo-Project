@@ -39,6 +39,7 @@ int const MAX_AMOUNT = 3;
 int const WHITE = 1;
 int const GREY = 0;
 int const BLACK = -1;
+int const INF = std::numeric_limits<int>::max();
 // Enumeration for different place types
 // !!Note since this is a C++11 "scoped enumeration", you'll have to refer to
 // individual values as PlaceType::SHELTER etc.
