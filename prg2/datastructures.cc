@@ -445,7 +445,7 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
 
     Way* way = new Way{id, coords, calculate_way_length(coords)};
     Crossroad* crossroad = new Crossroad
-    {coords.front(), {}, INF, 0, WHITE, {nullptr, nullptr}, false};
+    {coords.front(), {}, INF, 0, INF, 0, WHITE, {nullptr, nullptr}, false};
 
     //if no crossroad exist in way starting and ending points
     if ( coord_1 == crossroads_.end() && coord_2 == crossroads_.end() )
@@ -458,7 +458,7 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
         else
         {
             Crossroad* crossroad_end = new Crossroad
-            {coords.back(), {}, INF, 0, WHITE, {nullptr, nullptr}, false};
+            {coords.back(), {}, INF, 0, INF, 0, WHITE, {nullptr, nullptr}, false};
             crossroad->neighbours.push_back({way, crossroad_end});
             crossroad_end->neighbours.push_back({way, crossroad});
             crossroads_.insert({coords.front(), crossroad});
@@ -706,6 +706,13 @@ std::vector<std::tuple<Coord, WayID, Distance>> Datastructures::route_shortest_d
     {
         reset_crossroads();
     }
+    for ( auto &crossroad : crossroads_ )
+    {
+        Coord c = crossroad.second->location;
+        crossroad.second->min_est =
+        std::floor(sqrt(pow((toxy.x - c.x), 2) +
+                        pow((toxy.y - c.y), 2)));
+    }
     auto comp = [](std::tuple<Distance,Way*,Crossroad*> a,
                    std::tuple<Distance,Way*,Crossroad*> b)
                    {return std::get<0>(a) > std::get<0>(b);};
@@ -715,6 +722,7 @@ std::vector<std::tuple<Coord, WayID, Distance>> Datastructures::route_shortest_d
 
     crossroads_.at(fromxy)->colour = GREY;
     crossroads_.at(fromxy)->dist_from_start = 0;
+    crossroads_.at((fromxy))->total_est = 0;
     p_queue.push({0, nullptr, crossroads_.at(fromxy)});
 
     std::tuple<Distance, Way*, Crossroad*> crossroad;
@@ -740,13 +748,14 @@ std::vector<std::tuple<Coord, WayID, Distance>> Datastructures::route_shortest_d
             if ( neighbour.second->colour == WHITE )
             {
                 neighbour.second->colour = GREY;
-                p_queue.push({n->dist_from_start, neighbour.first, neighbour.second});
+                p_queue.push({n->total_est, neighbour.first, neighbour.second});
             }
             if ( n->dist_from_start > std::get<2>(crossroad)->dist_from_start + d )
             {
                 n->dist_from_start = std::get<2>(crossroad)->dist_from_start + d;
                 n->arrived_from = {std::get<1>(crossroad), std::get<2>(crossroad)};
-                p_queue.push({n->dist_from_start, neighbour.first, neighbour.second});
+                n->total_est = n->dist_from_start + n->min_est;
+                p_queue.push({n->total_est, neighbour.first, neighbour.second});
             }
         }
         std::get<2>(crossroad)->colour = BLACK;
@@ -906,6 +915,8 @@ void Datastructures::reset_crossroads()
         crossroad.second->steps_from_start = 0;
         crossroad.second->dist_from_start = INF;
         crossroad.second->in_mst = false;
+        crossroad.second->min_est = 0;
+        crossroad.second->total_est = INF;
     }
     crossroads_clear = true;
 }

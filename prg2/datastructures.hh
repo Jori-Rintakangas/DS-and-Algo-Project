@@ -274,12 +274,12 @@ public:
 
     // Estimate of performance: O((n + m)*log m)
     // n == number of all ways. m == number of all crossroads.
-    // Short rationale for estimate: Dijkstra's algorithm, complexity as in BFS-search,
+    // Short rationale for estimate: A* algorithm, complexity as in BFS/DFS-searches above,
     // except that now priority_queue used for which push() and pop() are log m.
     std::vector<std::tuple<Coord, WayID, Distance>> route_shortest_distance(Coord fromxy, Coord toxy);
 
     // Estimate of performance: O(k*((n+m)*log m))
-    // n == number of ways, m == number of crossroads (in a single disconnected graph)
+    // n == number of ways, m == number of crossroads (both in a single disconnected graph)
     // k == number of disconnected graphs in the whole graph.
     // Short rationale for estimate: Prim's algorithm using priority queue -> O((n+m)*log m)
     // Prim's algorithm finds minimum spanning tree for a single disconnected graph, so
@@ -337,6 +337,8 @@ private:
         Coord location;
         std::vector<std::pair<Way*, Crossroad*>> neighbours;
         Distance dist_from_start;
+        Distance min_est;
+        Distance total_est;
         int steps_from_start;
         int colour;
         std::pair<Way*, Crossroad*> arrived_from;
