@@ -443,8 +443,7 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     auto coord_1 = crossroads_.find(coords.front());
     auto coord_2 = crossroads_.find(coords.back());
 
-    Way* way = new Way{id, coords, 0};
-    way->length = calculate_way_length(way);
+    Way* way = new Way{id, coords, calculate_way_length(coords)};
     Crossroad* crossroad = new Crossroad
     {coords.front(), {}, INF, 0, WHITE, {nullptr, nullptr}, false};
 
@@ -507,7 +506,7 @@ std::vector<std::pair<WayID, Coord>> Datastructures::ways_from(Coord xy)
     auto crossroad = crossroads_.find(xy);
     if ( crossroad != crossroads_.end() )
     {
-        for ( auto &crossroad : crossroads_.at(xy)->neighbours )
+        for ( auto &crossroad : crossroad->second->neighbours )
         {
             ways_from_crossroad.push_back({crossroad.first->id,
                                   crossroad.second->location});
@@ -911,14 +910,13 @@ void Datastructures::reset_crossroads()
     crossroads_clear = true;
 }
 
-Distance Datastructures::calculate_way_length(Way* way)
+Distance Datastructures::calculate_way_length(std::vector<Coord> c)
 {
     Distance dist = 0;
-    std::vector<Coord> v = way->coordinates;
-    for ( unsigned long long int i = 0; i < v.size() - 1; ++i )
+    for ( unsigned long long int i = 0; i < c.size() - 1; ++i )
     {
-        dist += std::floor(sqrt(pow((v.at(i).x - v.at(i+1).x), 2) +
-                                pow((v.at(i).y - v.at(i+1).y), 2)));
+        dist += std::floor(sqrt(pow((c.at(i).x - c.at(i+1).x), 2) +
+                                pow((c.at(i).y - c.at(i+1).y), 2)));
     }
     return dist;
 }
