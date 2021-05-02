@@ -282,10 +282,10 @@ public:
     std::vector<std::tuple<Coord, WayID, Distance>> route_shortest_distance(Coord fromxy, Coord toxy);
 
     // Estimate of performance: O(k*((n+m)*log m))
-    // n == number of ways, m == number of crossroads (both in a single disconnected graph)
-    // k == number of disconnected graphs in the whole graph.
+    // n == number of ways, m == number of crossroads (both in a single connected graph)
+    // k == number of separate connected graphs in the whole graph.
     // Short rationale for estimate: Prim's algorithm using priority queue -> O((n+m)*log m)
-    // Prim's algorithm finds minimum spanning tree for a single disconnected graph, so
+    // Prim's algorithm finds minimum spanning tree for a single connected graph, so
     // we need to run it k times -> O(k*((n+m)*log m))
     Distance trim_ways();
 
