@@ -1,0 +1,23 @@
+In this implementation each way and crossroad are represented using struct that contains
+information of them. Crossroad-struct contains also a vector of pairs where each pair
+contains a pointer to the Way-struct and pointer to another Crossroad-struct. This vector
+contains the information of neighbour crossroads and also which way leads to neighbour
+crossroad. In that way, crossroads and ways create graph-structure. There are also two 
+unordered_maps that contain pointers to all Crossroad- and Way-structs with Crossroad
+coordinate and WayID as keys. This gives as an efficient way to access any Crossroad
+or Way information when needed.
+
+From path finding algorithms, DFS, BFS and A* -algorithms are used. route_any() method uses
+BFS-algorithm, since it turned out to be faster than DFS-algorithm, at least with given test
+data. route_least_crossroads() method naturally uses BFS, since BFS finds the route with
+least steps. route_with_cycle() method uses DFS, since we need to find out whether there is
+a cycle. It uses recursive DFS because it is more simple. Also, when we return back from 
+recursive DFS calls, we can easily store the information that the method needs to return.
+
+route_shortest_distance() method uses A*-algorithm since we need to find out the shortest path
+in a weighted graph. A* also gives better performance than Dijkstra's algorithm. trim_ways()
+method uses Prim's algorithm to find out the minimum spanning tree. Prim's algorithm is used
+since the implementation of that was easy because each crossroad in the graph has the
+information of their neighbour crossroads. Since Prim's algorithm only finds the minimum
+spanning tree for a connected graph, we need to run it separately for every separate connected
+graph in the whole graph.
