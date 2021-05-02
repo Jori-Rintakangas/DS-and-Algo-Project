@@ -426,12 +426,17 @@ AreaID Datastructures::common_area_of_subareas(AreaID id1, AreaID id2)
 
 std::vector<WayID> Datastructures::all_ways()
 {
-    std::vector<WayID> ways = {};
+    if ( ways_valid_ )
+    {
+        return way_ids_;
+    }
+    way_ids_.clear();
     for ( auto &w : ways_ )
     {
-        ways.push_back(w.first);
+        way_ids_.push_back(w.first);
     }
-    return ways;
+    ways_valid_ = true;
+    return way_ids_;
 }
 
 bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
@@ -451,7 +456,7 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
     if ( coord_1 == crossroads_.end() && coord_2 == crossroads_.end() )
     {
         if ( coords.front() == coords.back() )
-        {
+        {   // no need for two crossroads
             crossroad->neighbours.push_back({way, crossroad});
             crossroads_.insert({coords.front(), crossroad});
         }
@@ -497,6 +502,7 @@ bool Datastructures::add_way(WayID id, std::vector<Coord> coords)
         delete crossroad; //if there was no need for new crossroad
     }
     ways_.insert({id, way});
+    ways_valid_ = false;
     return true;
 }
 
@@ -536,6 +542,7 @@ void Datastructures::clear_ways()
         delete crossroad.second;
     }
     ways_.clear();
+    way_ids_.clear();
     crossroads_.clear();
 }
 
@@ -618,6 +625,7 @@ bool Datastructures::remove_way(WayID id)
     }
     delete ways_.at(id);
     ways_.erase(id);
+    ways_valid_ = false;
     return true;
 }
 
@@ -810,22 +818,22 @@ Distance Datastructures::trim_ways()
         {
             cost = crossroad.first->length;
         }
-        if ( crossroad.second->in_mst == false )
+        if ( !crossroad.second->in_mst )
         {
             mst_length += cost;
             crossroad.second->in_mst = true;
             for ( auto &n : crossroad.second->neighbours )
             {
-                if ( n.second->in_mst == false )
+                if ( !n.second->in_mst )
                 {
                     p_queue.push(n);
                 }
                 else if ( crossroad.second->location == n.second->location )
-                {
+                {   // if way begin and end is same crossroad
                     ways_to_remove.push_back(n.first->id);
                 }
                 else if ( crossroad.first->id != n.first->id )
-                {
+                {   // removing the way if it does not lead to crossroad we came from
                     ways_to_remove.push_back(n.first->id);
                 }
             }

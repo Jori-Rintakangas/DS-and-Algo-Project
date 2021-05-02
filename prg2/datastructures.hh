@@ -291,6 +291,7 @@ private:
     Distance dist_so_far_ = 0;
     Coord cycle_end_ = {0,0};
 
+    bool ways_valid_ = true;
     bool cycle_found_ = false;
     bool crossroads_clear = true;
     bool alphabet_sorted_ = false;
@@ -350,6 +351,7 @@ private:
 
     std::vector<std::tuple<Coord, WayID, Distance>> route_;
     std::vector<std::tuple<Coord, WayID>> cycle_route_;
+    std::vector<WayID> way_ids_;
 
     void store_path(Coord fromxy, Coord toxy, Distance dist, WayID id);
     void execute_dfs_search(std::pair<Way*, Crossroad*> crossroad);
