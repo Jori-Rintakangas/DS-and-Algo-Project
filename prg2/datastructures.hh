@@ -216,42 +216,45 @@ public:
 
     // Phase 2 operations
 
-    // Estimate of performance:
-    // Short rationale for estimate:
+    // Estimate of performance: O(n)
+    // Short rationale for estimate: Traversing all ways, and/or returning vector.
     std::vector<WayID> all_ways();
 
-    // Estimate of performance: Best: Theta(1), Worst: O(n)
+    // Estimate of performance: O(m), Worst: O(n+m)
+    // m == number of way coordinates, n == number of all ways/crossroads
     // Short rationale for estimate: unordered_map find(), insert() operations
-    // are constant on average and vector push_back is constant.
-    // Worst case if unordered_map operations take O(n).
+    // are constant on average and vector push_back is constant, traversing
+    // all way coordinates -> O(m). Worst case if unordered_map operations take O(n).
     bool add_way(WayID id, std::vector<Coord> coords);
 
-    // Estimate of performance: Best: Theta(1), Worst: O(n)
-    // n == number of all crossroads. m == number of neighbour crossroads of given crossroad
-    // Short rationale for estimate: Best if crossroad not found and unordered_map
-    // find() operation is Theta(1). Worst if find() takes O(n) or if n == m.
+    // Estimate of performance: O(m), Worst: O(n+m)
+    // m == number of neighbour crossroads of given crossroad. n == number of all crossroads.
+    // Short rationale for estimate: unordered_map find() operation is constant on average,
+    // vector push_back() constant, traversing all neighbours -> O(m)
+    // Worst case if find() takes O(n).
     std::vector<std::pair<WayID, Coord>> ways_from(Coord xy);
 
-    // Estimate of performance: Best: Theta(1), Worst: O(n)
-    // Short rationale for estimate: Best if way not found and unordered_map
-    // find() operation is Theta(1). Worst if find() takes O(n).
+    // Estimate of performance: O(m), Worst: O(n+m)
+    // m == number of way coordinates. n == number of all ways.
+    // Short rationale for estimate: unordered_map find() operation is constant, returning
+    // a vector with m elements -> O(m). Worst case if find() takes O(n).
     std::vector<Coord> get_way_coords(WayID id);
 
-    // Estimate of performance: O(n + m)
+    // Estimate of performance: O(n+m)
     // n == number of all ways. m == number of all crossroads.
     // Short rationale for estimate: Traversing all ways and crossrads,
     // clear() operation also linear.
     void clear_ways();
 
-    // Estimate of performance: O(n + m)
-    // n == number of all ways. m == number of all crossroads.
+    // Estimate of performance: O(n+m+p)
+    // n == number of all ways. m == number of all crossroads. p == number of crossroads in route.
     // Short rationale for estimate: Executes BFS-search using queue. For queue
-    // push() and pop() are constant. If reset_crossroads() called, its complexity is O(m)
+    // push() and pop() are constant. store_path() executed p times.
     std::vector<std::tuple<Coord, WayID, Distance>> route_any(Coord fromxy, Coord toxy);
 
     // Non-compulsory operations
 
-    // Estimate of performance: O(n + m), Worst: O(n + m + k + l)
+    // Estimate of performance: O(n+m), Worst: O(n+m+k+l)
     // n and m are number of neighbours in way begin and end crossroads.
     // k == number of all ways, l = number of all crossroads.
     // Short rationale for estimate: Vector erase() and std::remove_if() are
@@ -259,23 +262,23 @@ public:
     // Worst case if unordered_map erase() is linear.
     bool remove_way(WayID id);
 
-    // Estimate of performance: O(n + m)
-    // n == number of all ways. m == number of all crossroads.
+    // Estimate of performance: O(n+m+p)
+    // n == number of all ways. m == number of all crossroads. p == number of crossroads in route.
     // Short rationale for estimate: Executes BFS-search using queue. For queue
-    // push() and pop() are constant. If reset_crossroads() called, its complexity is O(m)
+    // push() and pop() are constant. store_path() executed p times.
     std::vector<std::tuple<Coord, WayID, Distance>> route_least_crossroads(Coord fromxy, Coord toxy);
 
-    // Estimate of performance: O(n + m)
+    // Estimate of performance: O(n+m)
     // n == number of all ways. m == number of all crossroads.
     // Short rationale for estimate: Calling recursive DFS-search method inside
     // which there are vector push_back() opeartions which is constant.
-    // If reset_crossroads() called, its complexity is O(m)
     std::vector<std::tuple<Coord, WayID>> route_with_cycle(Coord fromxy);
 
-    // Estimate of performance: O((n + m)*log m)
-    // n == number of all ways. m == number of all crossroads.
+    // Estimate of performance: O(p+(n+m)*log m)
+    // n == number of all ways. m == number of all crossroads. p == number of crossroads in route.
     // Short rationale for estimate: A* algorithm, complexity as in BFS/DFS-searches above,
     // except that now priority_queue used for which push() and pop() are log m.
+    // store_path() executed p times.
     std::vector<std::tuple<Coord, WayID, Distance>> route_shortest_distance(Coord fromxy, Coord toxy);
 
     // Estimate of performance: O(k*((n+m)*log m))
