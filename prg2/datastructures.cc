@@ -792,6 +792,7 @@ Distance Datastructures::trim_ways()
     std::priority_queue<std::pair<Way*, Crossroad*>,
     std::vector<std::pair<Way*, Crossroad*>>, decltype(comp)> p_queue(comp);
 
+    crossroads_.reserve(0); //clearing allocated buckets for faster copying next line
     auto crossroads_to_check = crossroads_;
     std::vector<WayID> ways_to_remove = {};
 
