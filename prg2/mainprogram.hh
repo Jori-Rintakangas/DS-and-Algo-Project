@@ -1,3 +1,9 @@
+/* Ready-made code provided by the course COMP.CS.300
+ * Data structures and algorithms 1.
+ * Copyright (C) 2021 Matti Rintala, matti.rintala@tuni.fi
+ */
+
+
 #ifndef MAINPROGRAM_HH
 #define MAINPROGRAM_HH
 

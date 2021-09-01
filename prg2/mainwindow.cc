@@ -1,3 +1,8 @@
+/* Ready-made code provided by the course COMP.CS.300
+ * Data structures and algorithms 1.
+ * Copyright (C) 2021 Matti Rintala, matti.rintala@tuni.fi
+ */
+
 // The main program (provided by the course), TIE-20100/TIE-20106
 //
 // DO ****NOT**** EDIT THIS FILE!
