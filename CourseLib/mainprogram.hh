@@ -30,7 +30,7 @@
 #include <bitset>
 #include <cassert>
 
-#include "datastructures.hh"
+#include "StudentLib/datastructures.hh"
 
 class MainWindow; // In case there's UI
 

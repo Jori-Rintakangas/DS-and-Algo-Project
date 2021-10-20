@@ -38,17 +38,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
-    datastructures.cc \
-    mainwindow.cc \
-    mainprogram.cc
+    StudentLib/datastructures.cc \
+    CourseLib/mainwindow.cc \
+    CourseLib/mainprogram.cc
 
 HEADERS += \
-    datastructures.hh \
-    mainwindow.hh \
-    mainprogram.hh
+    StudentLib/datastructures.hh \
+    CourseLib/mainwindow.hh \
+    CourseLib/mainprogram.hh
 
 FORMS += \
-    mainwindow.ui
+    CourseLib/mainwindow.ui
 
 
 # If you uncomment the lines below and recompile EVERYTHING (by selecting "Rebuild all" from the Build menu),

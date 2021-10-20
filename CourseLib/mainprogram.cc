@@ -119,7 +119,7 @@ using std::back_inserter;
 
 #include "mainprogram.hh"
 
-#include "datastructures.hh"
+#include "StudentLib/datastructures.hh"
 
 #ifdef GRAPHICAL_GUI
 #include "mainwindow.hh"
