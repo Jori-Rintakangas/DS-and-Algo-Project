@@ -24,10 +24,10 @@ and data structures so that the operations above can be executed.
 An example of finding a path that:
 
 Is shortest
-![image](/Assets/ex1)
+![image](/Assets/ex1.PNG)
 
 Has least amount of crossroads
-![image](/Assets/ex2)
+![image](/Assets/ex2.PNG)
 
 ## Technologies
 [Qt Graphics View Framework](https://doc.qt.io/qt-5/graphicsview.html)
